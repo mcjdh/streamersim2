@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Streamer Simulator 2</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="game-container">
+        <div id="stream-display">
+            <div id="stream-content"></div>
+            <div id="stream-overlay">
+                <div id="viewers-count">Viewers: 0</div>
+                <div id="stream-timer">00:00</div>
+            </div>
+        </div>
+        <div id="stats-panel">
+            <div class="stat-item">Subscribers: <span id="subscribers">0</span></div>
+            <div class="stat-item">Money: $<span id="money">0</span></div>
+            <div class="stat-item">Reputation: <span id="reputation">0</span></div>
+            <div class="stat-item">Energy: <span id="energy">100</span>%</div>
+        </div>
+        <div id="controls-panel">
+            <button id="start-stream">Start Stream</button>
+            <button id="end-stream" disabled>End Stream</button>
+            <div id="stream-options"></div>
+        </div>
+        <div id="events-log"></div>
+        <div id="notification-area"></div>
+    </div>
+
+    <!-- Core game engine -->
+    <script src="js/config.js"></script>
+    <script src="js/events.js"></script>
+    <script src="js/player.js"></script>
+    <script src="js/stream.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>
