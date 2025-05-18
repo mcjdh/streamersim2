@@ -71,6 +71,29 @@ class Stream {
         GAME.player.addSubscribers(rewards.subscribers);
         GAME.player.changeReputation(rewards.reputation);
         
+        // Check for subscriber churn due to bad stream performance
+        const durationFactor = Math.min(this.duration / this.targetDuration, 1.0); // Already calculated in calculateRewards, but recalculate for clarity here or pass from there
+        const endedDueToExhaustion = GAME.player.energy <= 0;
+
+        if ((durationFactor < CONFIG.BAD_STREAM_CHURN_THRESHOLD || endedDueToExhaustion) && GAME.player.subscribers >= CONFIG.MIN_SUBSCRIBERS_FOR_CHURN) {
+            let churnPercent = CONFIG.BAD_STREAM_CHURN_BASE_PERCENT;
+            const reputationMitigation = GAME.player.reputation * CONFIG.CHURN_REPUTATION_MITIGATION_FACTOR;
+            churnPercent = Math.max(0, churnPercent - reputationMitigation);
+            churnPercent = Math.min(churnPercent, CONFIG.MAX_CHURN_PERCENT_CAP);
+
+            if (churnPercent > 0) {
+                const subsToLose = Math.floor(GAME.player.subscribers * churnPercent);
+                if (subsToLose > 0) {
+                    GAME.player.removeSubscribers(subsToLose);
+                    let churnReason = "Stream performance was poor.";
+                    if (endedDueToExhaustion) churnReason = "Stream ended due to exhaustion.";
+                    else if (durationFactor < CONFIG.BAD_STREAM_CHURN_THRESHOLD) churnReason = "Stream was too short.";
+                    UI.logEvent(`Lost ${subsToLose} subscribers. Reason: ${churnReason}`);
+                    UI.showNotification(`Oh no! Lost ${subsToLose} subscribers due to a bad stream!`);
+                }
+            }
+        }
+        
         // Update stats
         GAME.player.stats.totalStreamTime += this.duration;
         GAME.player.stats.streamsCompleted++;
@@ -93,7 +116,7 @@ class Stream {
         let viewers = streamTypeConfig.baseViewers;
         
         // Factor in subscribers (some percentage will watch)
-        viewers += Math.floor(GAME.player.subscribers * 0.1);
+        viewers += Math.floor(GAME.player.subscribers * 0.15);
         
         // Factor in reputation
         viewers *= (0.5 + (GAME.player.reputation / 100) * 1.5);
@@ -134,15 +157,24 @@ class Stream {
         // Did stream meet target duration?
         const durationFactor = Math.min(this.duration / this.targetDuration, 1.0);
         
-        // Subscribers gained based on viewership and duration
-        rewards.subscribers = Math.floor(this.currentViewers * 0.05 * durationFactor);
-        
-        // Money from subscribers
+        // Money from subscribers (based on current total subs and duration)
         rewards.money = GAME.player.subscribers * CONFIG.SUBSCRIBER_VALUE * (this.duration / 60);
         
         // Money from donations (already accumulated during stream)
         // Add current money earned from donations
         rewards.money = Math.floor(rewards.money);
+        
+        // New subscribers based on performance
+        // A simple formula: 1 new sub per 50 average viewers, adjusted by reputation and duration factor
+        // We use currentViewers as a proxy for average viewers for now.
+        // Ensure currentViewers is not zero to avoid division by zero if stream ends abruptly with 0 viewers.
+        if (this.currentViewers > 0) {
+            const baseNewSubs = (this.currentViewers / 50); 
+            const reputationBonus = (GAME.player.reputation / 100) + 0.5; // Min 0.5, Max 1.5 multiplier
+            rewards.subscribers = Math.floor(baseNewSubs * durationFactor * reputationBonus);
+        } else {
+            rewards.subscribers = 0; // No new subs if stream ended with no viewers
+        }
         
         // Reputation change
         if (durationFactor >= 0.9) {
@@ -204,20 +236,25 @@ class Stream {
             
             // Check for random events
             this.checkForRandomEvent();
+
+            // Check for new live subscribers
+            if (this.currentViewers > 0 && Math.random() < (this.currentViewers * CONFIG.LIVE_SUBSCRIBER_RATE)) {
+                GAME.player.addSubscribers(1);
+                // Consider a subtle UI notification here in the future if desired
+            }
             
             // Check if we've reached target duration
             if (elapsed >= this.targetDuration) {
                 UI.highlightEndStream();
             }
             
-            // Use small amounts of energy during stream
-            if (elapsed % 4 === 0) {
-                GAME.player.useEnergy(1);
-                if (GAME.player.energy <= 0) {
-                    UI.logEvent("You're exhausted! Stream ended abruptly.");
-                    CHAT_MANAGER.stopChatting(); // Stop chat if stream ends due to exhaustion
-                    this.end();
-                }
+            // Use energy during stream more rapidly
+            // Target: 100 energy in 30 seconds => 100/30 = 3.33 energy per second
+            GAME.player.useEnergy(10/3); 
+            if (GAME.player.energy <= 0) {
+                UI.logEvent("You're exhausted! Stream ended abruptly.");
+                CHAT_MANAGER.stopChatting(); // Stop chat if stream ends due to exhaustion
+                this.end();
             }
         }, 1000);
     }

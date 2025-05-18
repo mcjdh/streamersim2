@@ -14,6 +14,10 @@ class UI {
             GAME.endStream();
         });
         
+        document.getElementById('active-rest').addEventListener('click', () => {
+            GAME.performActiveRest(); // Call the new game method
+        });
+        
         // Create stream type options
         this.createStreamOptions();
         
@@ -81,7 +85,7 @@ class UI {
         document.getElementById('subscribers').textContent = GAME.player.subscribers;
         document.getElementById('money').textContent = GAME.player.money;
         document.getElementById('reputation').textContent = GAME.player.reputation;
-        document.getElementById('energy').textContent = GAME.player.energy;
+        document.getElementById('energy').textContent = Math.floor(GAME.player.energy);
     }
     
     static updateStreamDisplay(streamType) {
@@ -132,6 +136,7 @@ class UI {
     static toggleStreamControls(isStreaming) {
         document.getElementById('start-stream').disabled = isStreaming;
         document.getElementById('end-stream').disabled = !isStreaming;
+        document.getElementById('active-rest').disabled = isStreaming; // Enable/disable rest button
         
         const streamOptions = document.getElementById('stream-options');
         const radioButtons = streamOptions.querySelectorAll('input[type="radio"]');

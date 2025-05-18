@@ -26,19 +26,39 @@ const CONFIG = {
     },
     
     // Event probability
-    EVENT_CHANCE_PER_SECOND: 0.2,
+    EVENT_CHANCE_PER_SECOND: 0.05,
     
     // Economy settings
-    SUBSCRIBER_VALUE: 1, // money per subscriber per stream
+    SUBSCRIBER_VALUE: 2, // money per subscriber per stream
     VIEWER_DONATION_CHANCE: 0.01, // chance per viewer per second
     AVERAGE_DONATION_AMOUNT: [1, 20], // min/max range
+    LIVE_SUBSCRIBER_RATE: 0.0007, // Chance per viewer per second to subscribe live
     
     // Energy recovery
-    ENERGY_RECOVERY_RATE: 5, // per minute offline
+    ENERGY_RECOVERY_RATE: 15, // per minute offline
     ENERGY_RECOVERY_INTERVAL: 5, // in seconds
     
     // Misc
-    LOG_MAX_ENTRIES: 100
+    LOG_MAX_ENTRIES: 100,
+
+    // Subscriber Milestones
+    SUBSCRIBER_MILESTONES: [
+        { count: 10, description: "First milestone! Gained a small bonus.", rewards: { money: 50 } },
+        { count: 50, description: "Growing community! Your dedication is paying off.", rewards: { money: 200, maxEnergyBonus: 5 } },
+        { count: 100, description: "Serious streamer! You've hit 100 subscribers!", rewards: { money: 500, reputation: 5 } },
+        { count: 250, description: "Fan Favorite! Your channel is booming.", rewards: { money: 1000, reputation: 10 } }, // We can add item/stream unlocks here later
+        { count: 500, description: "Streaming Star! Halfway to the win condition!", rewards: { money: 2500, maxEnergyBonus: 10, reputation: 10 } }
+    ],
+
+    // Subscriber Churn Settings (Post-Stream)
+    MIN_SUBSCRIBERS_FOR_CHURN: 20, // Minimum subscribers before churn can occur
+    BAD_STREAM_CHURN_THRESHOLD: 0.5, // If durationFactor is below this, churn is possible
+    BAD_STREAM_CHURN_BASE_PERCENT: 0.05, // Base 5% of subs at risk after a bad stream
+    CHURN_REPUTATION_MITIGATION_FACTOR: 0.005, // Churn % is reduced by (Reputation * this_factor). E.g. 100 Rep * 0.005 = 0.5 reduction from base rate.
+    MAX_CHURN_PERCENT_CAP: 0.10, // Max 10% of subs can be lost in one event
+
+    // Active Rest Settings
+    ACTIVE_REST_ENERGY_GAIN: 20 // Energy gained per click of the Rest button
 };
 
 CONFIG.SHOP_ITEMS = [

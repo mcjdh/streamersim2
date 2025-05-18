@@ -67,7 +67,7 @@ class Game {
         
         // Start new timer for energy recovery when not streaming
         this.energyRecoveryTimer = setInterval(() => {
-            if (!this.currentStream.active && this.player.energy < 100) {
+            if (!this.currentStream.active && this.player.energy < this.player.maxEnergy) {
                 // Calculate energy recovery
                 const recovery = (CONFIG.ENERGY_RECOVERY_RATE / 60) * CONFIG.ENERGY_RECOVERY_INTERVAL;
                 this.player.recoverEnergy(recovery);
@@ -102,6 +102,23 @@ class Game {
             totalEvents: this.player.stats.totalEvents,
             totalDonations: this.player.stats.totalDonations
         };
+    }
+
+    performActiveRest() {
+        if (this.currentStream.active) {
+            UI.showNotification("Cannot rest while streaming!");
+            return;
+        }
+
+        if (this.player.energy >= this.player.maxEnergy) {
+            UI.showNotification("Energy is already full!");
+            return;
+        }
+
+        const energyGained = CONFIG.ACTIVE_REST_ENERGY_GAIN;
+        this.player.recoverEnergy(energyGained);
+        UI.logEvent(`Took a short rest and recovered ${energyGained} energy.`);
+        // Optionally, add a small time passage or a cooldown in the future
     }
 }
 

@@ -4,7 +4,7 @@ class EventManager {
             id: "raid",
             name: "Channel Raid",
             description: "Another streamer is raiding your channel!",
-            probability: 0.2,
+            probability: 0.1,
             applicableStreams: ["all"],
             effect: function() {
                 const viewerBoost = Math.floor(Math.random() * 20) + 10;
@@ -19,7 +19,7 @@ class EventManager {
             id: "technical_difficulties",
             name: "Technical Difficulties",
             description: "Your stream is experiencing technical issues!",
-            probability: 0.15,
+            probability: 0.07,
             applicableStreams: ["all"],
             effect: function() {
                 const viewerLoss = Math.floor(GAME.currentStream.currentViewers * 0.2);
@@ -34,7 +34,7 @@ class EventManager {
             id: "big_donation",
             name: "Big Donation",
             description: "Someone made a large donation!",
-            probability: 0.1,
+            probability: 0.05,
             applicableStreams: ["all"],
             effect: function() {
                 const amount = Math.floor(Math.random() * 50) + 50;
@@ -48,7 +48,7 @@ class EventManager {
             id: "trolls",
             name: "Troll Attack",
             description: "Trolls are spamming your chat!",
-            probability: 0.15,
+            probability: 0.07,
             applicableStreams: ["all"],
             effect: function() {
                 // Effect depends on streamer's reputation
@@ -70,7 +70,7 @@ class EventManager {
             id: "viral_moment",
             name: "Viral Moment",
             description: "Something amazing happened that might go viral!",
-            probability: 0.05,
+            probability: 0.025,
             applicableStreams: ["all"],
             effect: function() {
                 const viewerBoost = Math.floor(Math.random() * 50) + 30;
@@ -87,7 +87,7 @@ class EventManager {
             id: "gaming_win",
             name: "Epic Game Victory",
             description: "You just won in an spectacular way!",
-            probability: 0.2,
+            probability: 0.1,
             applicableStreams: ["gaming"],
             effect: function() {
                 const skillBoost = 0.1;
@@ -103,7 +103,7 @@ class EventManager {
             id: "coding_breakthrough",
             name: "Coding Breakthrough",
             description: "You solved a difficult problem!",
-            probability: 0.2,
+            probability: 0.1,
             applicableStreams: ["coding"],
             effect: function() {
                 const skillBoost = 0.1;
