@@ -1,7 +1,7 @@
 const CONFIG = {
     // Stream settings
-    STREAM_MIN_DURATION: 8, // in seconds
-    STREAM_MAX_DURATION: 14, // in seconds
+    STREAM_MIN_DURATION: 60, // in seconds
+    STREAM_MAX_DURATION: 180, // in seconds
     
     // Game balance
     STARTING_MONEY: 50,
@@ -40,3 +40,27 @@ const CONFIG = {
     // Misc
     LOG_MAX_ENTRIES: 100
 };
+
+CONFIG.SHOP_ITEMS = [
+    {
+        id: "pro_mic",
+        name: "Pro Microphone",
+        cost: 150,
+        description: "Boosts your reputation slightly.",
+        effect: { reputation: 5 } // One-time boost
+    },
+    {
+        id: "gaming_guide",
+        name: "Gaming Strategy Guide",
+        cost: 75,
+        description: "Slightly increases your gaming skill.",
+        effect: { skill: "gaming", amount: 0.2 }
+    },
+    {
+        id: "energy_drinks",
+        name: "Energy Drink Supply (1 Week)",
+        cost: 50,
+        description: "Instantly recovers some energy.",
+        effect: { energy: 25 } // One-time boost
+    }
+];

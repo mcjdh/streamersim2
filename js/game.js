@@ -111,51 +111,51 @@ window.addEventListener('DOMContentLoaded', () => {
     GAME.init();
     
     // Add CSS for donation animations
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes donationFloat {
-            0% { transform: scale(0.5); opacity: 0; }
-            10% { transform: scale(1.2); opacity: 1; }
-            20% { transform: scale(1); opacity: 1; }
-            80% { transform: translateY(-20px); opacity: 1; }
-            100% { transform: translateY(-40px); opacity: 0; }
-        }
-        
-        .highlight {
-            animation: highlight 0.5s infinite alternate;
-        }
-        
-        @keyframes highlight {
-            from { background-color: #9147ff; }
-            to { background-color: #ff4747; }
-        }
-        
-        .stream-gaming, .stream-chat, .stream-music, .stream-art, .stream-coding {
-            font-size: 24px;
-            text-align: center;
-        }
-        
-        .stream-option {
-            display: flex;
-            align-items: center;
-            margin: 5px 0;
-        }
-        
-        .stream-option input {
-            margin-right: 5px;
-        }
-        
-        .offline-message {
-            font-size: 24px;
-            color: #666;
-            text-align: center;
-        }
-        
-        .timestamp {
-            color: #9147ff;
-            font-weight: bold;
-            margin-right: 5px;
-        }
-    `;
-    document.head.appendChild(style);
+    // const style = document.createElement('style');
+    // style.textContent = `
+    //     @keyframes donationFloat {
+    //         0% { transform: scale(0.5); opacity: 0; }
+    //         10% { transform: scale(1.2); opacity: 1; }
+    //         20% { transform: scale(1); opacity: 1; }
+    //         80% { transform: translateY(-20px); opacity: 1; }
+    //         100% { transform: translateY(-40px); opacity: 0; }
+    //     }
+    //     
+    //     .highlight {
+    //         animation: highlight 0.5s infinite alternate;
+    //     }
+    //     
+    //     @keyframes highlight {
+    //         from { background-color: #9147ff; }
+    //         to { background-color: #ff4747; }
+    //     }
+    //     
+    //     .stream-gaming, .stream-chat, .stream-music, .stream-art, .stream-coding {
+    //         font-size: 24px;
+    //         text-align: center;
+    //     }
+    //     
+    //     .stream-option {
+    //         display: flex;
+    //         align-items: center;
+    //         margin: 5px 0;
+    //     }
+    //     
+    //     .stream-option input {
+    //         margin-right: 5px;
+    //     }
+    //     
+    //     .offline-message {
+    //         font-size: 24px;
+    //         color: #666;
+    //         text-align: center;
+    //     }
+    //     
+    //     .timestamp {
+    //         color: #9147ff;
+    //         font-weight: bold;
+    //         margin-right: 5px;
+    //     }
+    // `;
+    // document.head.appendChild(style);
 });

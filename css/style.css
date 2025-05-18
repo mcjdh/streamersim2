@@ -11,32 +11,34 @@ body {
 }
 
 #game-container {
-    max-width: 1000px;
+    max-width: 1200px;
     margin: 20px auto;
     padding: 10px;
     display: grid;
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: 2fr 1fr 1fr;
     grid-template-rows: auto auto auto;
     gap: 15px;
 }
 
 #stream-display {
-    grid-column: 1;
+    grid-column: 1 / span 2;
     grid-row: 1;
     background-color: #1f1f1f;
     border-radius: 5px;
-    height: 400px;
+    height: 450px;
     position: relative;
-    overflow: hidden;
     border: 2px solid #303030;
+    display: flex;
+    flex-direction: row;
 }
 
-#stream-content {
-    width: 100%;
+#stream-video-feed {
+    flex-grow: 1;
     height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
 }
 
 #stream-overlay {
@@ -49,9 +51,15 @@ body {
     justify-content: space-between;
 }
 
+#sidebar {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
 #stats-panel {
-    grid-column: 2;
-    grid-row: 1;
     background-color: #252525;
     padding: 15px;
     border-radius: 5px;
@@ -138,4 +146,170 @@ button:disabled {
     flex-wrap: wrap;
     gap: 10px;
     margin-top: 10px;
+}
+
+/* Added from js/game.js */
+@keyframes donationFloat {
+    0% { transform: scale(0.5); opacity: 0; }
+    10% { transform: scale(1.2); opacity: 1; }
+    20% { transform: scale(1); opacity: 1; }
+    80% { transform: translateY(-20px); opacity: 1; }
+    100% { transform: translateY(-40px); opacity: 0; }
+}
+
+.highlight {
+    animation: highlight 0.5s infinite alternate;
+}
+
+@keyframes highlight {
+    from { background-color: #9147ff; }
+    to { background-color: #ff4747; }
+}
+
+.stream-gaming, .stream-chat, .stream-music, .stream-art, .stream-coding {
+    font-size: 24px;
+    text-align: center;
+}
+
+.stream-option {
+    display: flex;
+    align-items: center;
+    margin: 5px 0;
+}
+
+.stream-option input {
+    margin-right: 5px;
+}
+
+.offline-message {
+    font-size: 24px;
+    color: #666;
+    text-align: center;
+}
+
+.timestamp {
+    color: #9147ff;
+    font-weight: bold;
+    margin-right: 5px;
+}
+
+#shop-panel {
+    background-color: #252525;
+    padding: 15px;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#shop-panel h2 {
+    margin-bottom: 10px;
+    color: #9147ff;
+}
+
+#shop-items-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.shop-item {
+    border: 1px solid #303030;
+    padding: 10px;
+    border-radius: 4px;
+    background-color: #1f1f1f;
+}
+
+.shop-item p {
+    margin-bottom: 5px;
+}
+
+.shop-item button {
+    width: 100%;
+    margin-top: 5px;
+}
+
+#chat-log {
+    width: 250px;
+    height: 100%;
+    background-color: #18181b;
+    border-left: 1px solid #303030;
+    padding: 10px;
+    overflow-y: auto;
+    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-message {
+    margin-bottom: 8px;
+    line-height: 1.4;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.chat-username {
+    margin-right: 5px;
+}
+
+/* Responsive Design for smaller screens (e.g., portrait mode) */
+@media (max-width: 768px) {
+    #game-container {
+        grid-template-columns: 1fr; /* Single column layout */
+        grid-template-rows: auto auto auto auto auto; /* Adjust rows for stacking */
+        max-width: 100%;
+        padding: 5px;
+    }
+
+    #stream-display {
+        grid-column: 1;
+        grid-row: 1;
+        flex-direction: column; /* Stack video over chat */
+        height: auto; /* Adjust height for stacked content */
+    }
+
+    #stream-video-feed {
+        height: 300px; /* Fixed height for video in portrait */
+        width: 100%;
+    }
+
+    #chat-log {
+        width: 100%; /* Chat takes full width */
+        height: 200px; /* Fixed height for chat in portrait */
+        border-left: none; /* No left border when full width */
+        border-top: 1px solid #303030; /* Add top border instead */
+        flex-direction: column; /* Ensure it's also column for responsive, if not inheriting */
+    }
+
+    #sidebar {
+        grid-column: 1;
+        grid-row: 2; /* Sidebar below stream display */
+        flex-direction: column; /* Ensure stats and shop stack if needed */
+    }
+    
+    #stats-panel, #shop-panel {
+        width: 100%; /* Make panels full width */
+    }
+
+    #controls-panel {
+        grid-column: 1;
+        grid-row: 3; /* Controls below sidebar */
+    }
+
+    #events-log {
+        grid-column: 1;
+        grid-row: 4; /* Events log at the bottom */
+        height: 120px; /* Slightly reduce height for smaller screens */
+    }
+
+    button {
+        padding: 12px 15px; /* Slightly larger buttons for touch */
+    }
+
+    #notification-area {
+        width: 90%;
+        left: 5%;
+        right: 5%;
+        top: 10px;
+    }
 }

@@ -9,17 +9,28 @@
 <body>
     <div id="game-container">
         <div id="stream-display">
-            <div id="stream-content"></div>
+            <div id="stream-video-feed"></div>
+            <div id="chat-log">
+                <!-- Chat messages will appear here -->
+            </div>
             <div id="stream-overlay">
                 <div id="viewers-count">Viewers: 0</div>
                 <div id="stream-timer">00:00</div>
             </div>
         </div>
-        <div id="stats-panel">
-            <div class="stat-item">Subscribers: <span id="subscribers">0</span></div>
-            <div class="stat-item">Money: $<span id="money">0</span></div>
-            <div class="stat-item">Reputation: <span id="reputation">0</span></div>
-            <div class="stat-item">Energy: <span id="energy">100</span>%</div>
+        <div id="sidebar">
+            <div id="stats-panel">
+                <div class="stat-item">Subscribers: <span id="subscribers">0</span></div>
+                <div class="stat-item">Money: $<span id="money">0</span></div>
+                <div class="stat-item">Reputation: <span id="reputation">0</span></div>
+                <div class="stat-item">Energy: <span id="energy">100</span>%</div>
+            </div>
+            <div id="shop-panel">
+                <h2>Shop</h2>
+                <div id="shop-items-container">
+                    <!-- Shop items will be populated by JS -->
+                </div>
+            </div>
         </div>
         <div id="controls-panel">
             <button id="start-stream">Start Stream</button>
@@ -35,6 +46,7 @@
     <script src="js/events.js"></script>
     <script src="js/player.js"></script>
     <script src="js/stream.js"></script>
+    <script src="js/chat.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/game.js"></script>
 </body>

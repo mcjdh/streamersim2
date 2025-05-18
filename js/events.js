@@ -144,6 +144,7 @@ class EventManager {
         GAME.player.stats.totalEvents++;
         const result = event.effect();
         UI.showNotification(`EVENT: ${event.name}`);
+        CHAT_MANAGER.postEventReaction(event);
         
         return result;
     }

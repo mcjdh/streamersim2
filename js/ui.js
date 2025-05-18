@@ -19,6 +19,7 @@ class UI {
         
         // Initial stats update
         this.updateStats();
+        this.createShopItems();
     }
     
     static createStreamOptions() {
@@ -44,6 +45,38 @@ class UI {
         });
     }
     
+    static createShopItems() {
+        const shopItemsContainer = document.getElementById('shop-items-container');
+        shopItemsContainer.innerHTML = ''; // Clear existing items
+
+        CONFIG.SHOP_ITEMS.forEach(item => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'shop-item';
+
+            const itemName = document.createElement('h4');
+            itemName.textContent = item.name;
+
+            const itemDesc = document.createElement('p');
+            itemDesc.textContent = item.description;
+
+            const itemCost = document.createElement('p');
+            itemCost.textContent = `Cost: $${item.cost}`;
+
+            const buyButton = document.createElement('button');
+            buyButton.textContent = "Buy";
+            buyButton.onclick = () => {
+                GAME.player.buyItem(item.id);
+                // Future: Could update shop UI here if item is single purchase
+            };
+
+            itemDiv.appendChild(itemName);
+            itemDiv.appendChild(itemDesc);
+            itemDiv.appendChild(itemCost);
+            itemDiv.appendChild(buyButton);
+            shopItemsContainer.appendChild(itemDiv);
+        });
+    }
+    
     static updateStats() {
         document.getElementById('subscribers').textContent = GAME.player.subscribers;
         document.getElementById('money').textContent = GAME.player.money;
@@ -52,10 +85,11 @@ class UI {
     }
     
     static updateStreamDisplay(streamType) {
-        const streamContent = document.getElementById('stream-content');
+        const streamVideoFeed = document.getElementById('stream-video-feed');
         
         if (!streamType) {
-            streamContent.innerHTML = '<div class="offline-message">Stream Offline</div>';
+            streamVideoFeed.innerHTML = '<div class="offline-message">Stream Offline</div>';
+            document.getElementById('chat-log').innerHTML = '';
             return;
         }
         
@@ -80,7 +114,7 @@ class UI {
                 content = '<div class="stream-generic">🎥 Live Stream</div>';
         }
         
-        streamContent.innerHTML = content;
+        streamVideoFeed.innerHTML = content;
     }
     
     static updateViewerCount(count) {
@@ -150,7 +184,7 @@ class UI {
     }
     
     static showDonation(amount) {
-        const streamContent = document.getElementById('stream-content');
+        const streamVideoFeed = document.getElementById('stream-video-feed');
         const donation = document.createElement('div');
         donation.className = 'donation-animation';
         donation.textContent = `$${amount}`;
@@ -163,13 +197,49 @@ class UI {
         donation.style.textShadow = '0 0 5px rgba(0,0,0,0.8)';
         donation.style.animation = 'donationFloat 2s forwards';
         
-        streamContent.appendChild(donation);
+        streamVideoFeed.appendChild(donation);
         
         setTimeout(() => {
             donation.remove();
         }, 2000);
         
         UI.logEvent(`Received a $${amount} donation!`);
+        CHAT_MANAGER.postDonationReaction(GAME.player.username || "GenerousViewer", amount);
+    }
+    
+    static addChatMessage(username, messageText, userColor = '#ffffff') {
+        const chatLog = document.getElementById('chat-log');
+        const messageEntry = document.createElement('div');
+        messageEntry.className = 'chat-message';
+
+        const userSpan = document.createElement('span');
+        userSpan.className = 'chat-username';
+        userSpan.textContent = `${username}: `;
+        userSpan.style.color = userColor;
+        userSpan.style.fontWeight = 'bold';
+
+        const textSpan = document.createElement('span');
+        textSpan.className = 'chat-text';
+        textSpan.textContent = messageText;
+
+        // Determine if chat should auto-scroll BEFORE appending the new message
+        // and before removing old messages, as scrollHeight will change.
+        const scrollThreshold = 20; // How many pixels from bottom to still consider "at bottom"
+        const isScrolledNearBottom = chatLog.scrollTop + chatLog.clientHeight >= chatLog.scrollHeight - scrollThreshold;
+
+        messageEntry.appendChild(userSpan);
+        messageEntry.appendChild(textSpan);
+        chatLog.appendChild(messageEntry);
+
+        // Limit chat log entries (removes from the top)
+        while (chatLog.children.length > CONFIG.LOG_MAX_ENTRIES) { 
+            chatLog.removeChild(chatLog.firstChild);
+        }
+
+        // Auto-scroll to bottom only if user was already near the bottom
+        if (isScrolledNearBottom) {
+            chatLog.scrollTop = chatLog.scrollHeight - chatLog.clientHeight; // Precise scroll to bottom
+        }
     }
     
     static showVictoryScreen() {

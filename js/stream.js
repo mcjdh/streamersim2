@@ -48,6 +48,7 @@ class Stream {
         this.startTimers();
         UI.updateStreamDisplay(this.type);
         UI.logEvent(`Started a ${streamTypeConfig.name} stream!`);
+        CHAT_MANAGER.startChatting(this.type); // Start chat simulation
         
         return true;
     }
@@ -59,7 +60,7 @@ class Stream {
         this.endTime = new Date();
         this.duration = (this.endTime - this.startTime) / 1000; // in seconds
         
-        // Clear timers
+        CHAT_MANAGER.stopChatting(); // Stop chat simulation
         this.clearTimers();
         
         // Calculate rewards
@@ -214,6 +215,7 @@ class Stream {
                 GAME.player.useEnergy(1);
                 if (GAME.player.energy <= 0) {
                     UI.logEvent("You're exhausted! Stream ended abruptly.");
+                    CHAT_MANAGER.stopChatting(); // Stop chat if stream ends due to exhaustion
                     this.end();
                 }
             }
