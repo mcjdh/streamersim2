@@ -63,11 +63,32 @@ const CONFIG = {
 
 CONFIG.SHOP_ITEMS = [
     {
+        id: "decent_mic",
+        name: "Decent Microphone",
+        cost: 80,
+        description: "Clearer audio for your viewers.",
+        effect: { reputation: 3 }
+    },
+    {
         id: "pro_mic",
         name: "Pro Microphone",
         cost: 150,
         description: "Boosts your reputation slightly.",
         effect: { reputation: 5 } // One-time boost
+    },
+    {
+        id: "basic_webcam",
+        name: "Basic Webcam",
+        cost: 70,
+        description: "A basic webcam to show your face. Slightly improves stream appeal.",
+        effect: { reputation: 2 }
+    },
+    {
+        id: "hd_webcam",
+        name: "HD Webcam",
+        cost: 250,
+        description: "A high-definition webcam. Looks more professional.",
+        effect: { reputation: 7 }
     },
     {
         id: "gaming_guide",
@@ -82,5 +103,19 @@ CONFIG.SHOP_ITEMS = [
         cost: 50,
         description: "Instantly recovers some energy.",
         effect: { energy: 25 } // One-time boost
+    },
+    {
+        id: "gaming_chair_basic",
+        name: "Basic Gaming Chair",
+        cost: 120,
+        description: "A comfortable chair. Recovers a bit of energy.",
+        effect: { energy: 15 }
+    },
+    {
+        id: "green_screen_kit",
+        name: "Green Screen Kit",
+        cost: 100,
+        description: "Basic green screen. Makes your stream look a bit more polished.",
+        effect: { reputation: 3 }
     }
 ];
