@@ -6,6 +6,9 @@ class UI {    static init() {
         
         this.selectedStreamType = localStorage.getItem('selectedStreamType') || 'gaming';
         
+        // Initialize dark mode
+        this.initDarkMode();
+        
         // Initialize UI event listeners
         document.getElementById('start-stream').addEventListener('click', () => {
             if (this.selectedStreamType) {
@@ -21,6 +24,11 @@ class UI {    static init() {
         
         document.getElementById('active-rest').addEventListener('click', () => {
             GAME.performActiveRest(); // Call the new game method
+        });
+        
+        // Dark mode toggle event listener
+        document.getElementById('theme-toggle').addEventListener('click', () => {
+            this.toggleDarkMode();
         });
         
         // Create stream type options
@@ -211,8 +219,21 @@ class UI {    static init() {
                     </div>
                 `;
                 
+                // Add accessibility attributes
+                card.setAttribute('tabindex', '0');
+                card.setAttribute('role', 'button');
+                card.setAttribute('aria-label', `Select ${streamType.name} stream type. Cost: $${streamType.cost}`);
+                
                 card.addEventListener('click', () => {
                     this.selectStreamType(streamType.id);
+                });
+                
+                // Add keyboard support
+                card.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        this.selectStreamType(streamType.id);
+                    }
                 });
             } else {
                 card.innerHTML = `
@@ -656,5 +677,49 @@ class UI {    static init() {
             document.body.removeChild(victoryOverlay);
             GAME.reset();
         });
+    }
+    
+    static initDarkMode() {
+        // Get saved theme preference or detect system preference
+        const savedTheme = localStorage.getItem('theme');
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        let theme;
+        if (savedTheme) {
+            theme = savedTheme;
+        } else {
+            theme = systemPrefersDark ? 'dark' : 'light';
+        }
+        
+        this.setTheme(theme);
+        
+        // Listen for system theme changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            if (!localStorage.getItem('theme')) { // Only follow system if no manual preference
+                this.setTheme(e.matches ? 'dark' : 'light');
+            }
+        });
+    }
+    
+    static setTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        
+        // Update toggle button icon
+        const toggleBtn = document.getElementById('theme-toggle');
+        if (toggleBtn) {
+            toggleBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
+            toggleBtn.title = `Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`;
+        }
+    }
+    
+    static toggleDarkMode() {
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        
+        this.setTheme(newTheme);
+        localStorage.setItem('theme', newTheme);
+        
+        // Show notification
+        this.showNotification(`Switched to ${newTheme} mode`);
     }
 }
