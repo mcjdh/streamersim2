@@ -341,4 +341,22 @@ class Stream {
             EventManager.triggerEvent(event);
         }
     }
+    
+    switchType(newStreamType) {
+        if (!this.active) return false;
+        
+        const streamTypeConfig = CONFIG.STREAM_TYPES.find(type => type.id === newStreamType);
+        if (!streamTypeConfig) return false;
+        
+        const oldType = this.type;
+        this.type = newStreamType;
+        
+        // Recalculate energy drain rate for new stream type
+        this.calculateEnergyDrainRate(streamTypeConfig);
+        
+        // Log the switch
+        UI.logEvent(`Switched from ${oldType} to ${newStreamType} stream!`);
+        
+        return true;
+    }
 }

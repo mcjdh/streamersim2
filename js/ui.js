@@ -1,15 +1,15 @@
-class UI {
-    static init() {
+class UI {    static init() {
         // Show tutorial for new players
         if (CONFIG.SHOW_TUTORIAL && !localStorage.getItem(CONFIG.TUTORIAL_SHOWN_KEY)) {
             this.showTutorial();
         }
         
+        this.selectedStreamType = localStorage.getItem('selectedStreamType') || 'gaming';
+        
         // Initialize UI event listeners
         document.getElementById('start-stream').addEventListener('click', () => {
-            const selectedStreamType = document.querySelector('input[name="stream-type"]:checked');
-            if (selectedStreamType) {
-                GAME.startStream(selectedStreamType.value);
+            if (this.selectedStreamType) {
+                GAME.startStream(this.selectedStreamType);
             } else {
                 this.showNotification("Select a stream type first!");
             }
@@ -24,7 +24,7 @@ class UI {
         });
         
         // Create stream type options
-        this.createStreamOptions();
+        this.createStreamTypeCards();
         
         // Initial stats update
         this.updateStats();
@@ -36,8 +36,7 @@ class UI {
         // Add touch event handlers for mobile
         this.initMobileControls();
     }
-    
-    static showTutorial() {
+      static showTutorial() {
         const tutorialOverlay = document.createElement('div');
         tutorialOverlay.className = 'tutorial-overlay';
         
@@ -52,12 +51,14 @@ class UI {
                 <li>90 Reputation</li>
             </ul>
             <p><strong>How to Play:</strong></p>
-            <p>1. Choose a stream type and click "Start Stream"</p>
-            <p>2. Manage your energy - streaming drains it!</p>
-            <p>3. End streams before you run out of energy</p>
-            <p>4. Use the Rest button between streams</p>
-            <p>5. Buy upgrades to improve your channel</p>
-            <p>6. Watch chat for viewer reactions!</p>
+            <p>1. <strong>Select a stream type</strong> by clicking on a card</p>
+            <p>2. Click "Start Stream" to begin streaming</p>
+            <p>3. <strong>Switch stream types</strong> while live for variety!</p>
+            <p>4. End streams before you run out of energy</p>
+            <p>5. Use the Rest button between streams</p>
+            <p>6. Buy upgrades to improve your channel</p>
+            <p>7. Watch chat for viewer reactions!</p>
+            <p><strong>New:</strong> You can now change stream types while live!</p>
             <button id="tutorial-close">Let's Stream!</button>
         `;
         
@@ -77,8 +78,7 @@ class UI {
         energyBar.innerHTML = '<div class="energy-fill"></div>';
         energyStatItem.appendChild(energyBar);
     }
-    
-    static initMobileControls() {
+      static initMobileControls() {
         // Add haptic feedback for mobile devices
         const buttons = document.querySelectorAll('button');
         buttons.forEach(button => {
@@ -94,45 +94,249 @@ class UI {
         document.addEventListener('touchend', (e) => {
             const currentTime = new Date().getTime();
             const tapLength = currentTime - lastTap;
-            if (tapLength < 500 && tapLength > 0) {
+            if (tapLength < 300 && tapLength > 0) {
                 e.preventDefault();
             }
             lastTap = currentTime;
         });
+        
+        // Add swipe gesture for stream type switching (mobile only)
+        if (window.innerWidth <= 768) {
+            this.initSwipeGestures();
+        }
+        
+        // Handle orientation changes
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => {
+                this.handleOrientationChange();
+            }, 500);
+        });
     }
     
-    static createStreamOptions() {
-        const streamOptionsContainer = document.getElementById('stream-options');
+    static initSwipeGestures() {
+        const streamDisplay = document.getElementById('stream-display');
+        let startX = 0;
+        let startY = 0;
+        let threshold = 100; // Minimum swipe distance
+        
+        streamDisplay.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+        }, { passive: true });
+        
+        streamDisplay.addEventListener('touchend', (e) => {
+            if (!GAME.currentStream || !GAME.currentStream.active) return;
+            
+            const endX = e.changedTouches[0].clientX;
+            const endY = e.changedTouches[0].clientY;
+            const deltaX = endX - startX;
+            const deltaY = endY - startY;
+            
+            // Check if it's a horizontal swipe
+            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > threshold) {
+                const currentIndex = CONFIG.STREAM_TYPES.findIndex(type => type.id === GAME.currentStream.type);
+                const unlockedTypes = CONFIG.STREAM_TYPES.filter(type => 
+                    type.unlocked || (type.unlockAt && GAME.player.subscribers >= type.unlockAt)
+                );
+                
+                if (deltaX > 0) {
+                    // Swiped right - next stream type
+                    const nextIndex = (currentIndex + 1) % unlockedTypes.length;
+                    if (unlockedTypes[nextIndex] && unlockedTypes[nextIndex].id !== GAME.currentStream.type) {
+                        this.switchStreamType(unlockedTypes[nextIndex].id);
+                    }
+                } else {
+                    // Swiped left - previous stream type
+                    const prevIndex = currentIndex - 1 < 0 ? unlockedTypes.length - 1 : currentIndex - 1;
+                    if (unlockedTypes[prevIndex] && unlockedTypes[prevIndex].id !== GAME.currentStream.type) {
+                        this.switchStreamType(unlockedTypes[prevIndex].id);
+                    }
+                }
+            }
+        }, { passive: true });
+    }
+    
+    static handleOrientationChange() {
+        // Adjust layout for orientation changes
+        const gameContainer = document.getElementById('game-container');
+        if (window.innerHeight < window.innerWidth && window.innerWidth <= 768) {
+            // Landscape mobile mode
+            gameContainer.style.gridTemplateColumns = '1fr 1fr';
+            gameContainer.style.gridTemplateRows = 'auto auto auto';
+        } else {
+            // Portrait mode - reset to default mobile layout
+            gameContainer.style.gridTemplateColumns = '1fr';
+            gameContainer.style.gridTemplateRows = 'auto auto auto auto auto';        }
+    }
+    
+    static createStreamTypeCards() {
+        const cardsContainer = document.getElementById('stream-type-cards');
+        cardsContainer.innerHTML = '';
+        
+        const streamTypeEmojis = {
+            'gaming': '🎮',
+            'justchatting': '💬',
+            'music': '🎵',
+            'artstream': '🎨',
+            'coding': '💻'
+        };
         
         CONFIG.STREAM_TYPES.forEach(streamType => {
-            const option = document.createElement('div');
-            option.className = 'stream-option';
+            const card = document.createElement('div');
+            card.className = 'stream-type-card';
             
             // Check if unlocked
             const isUnlocked = streamType.unlocked || 
                 (streamType.unlockAt && GAME.player.subscribers >= streamType.unlockAt);
             
-            const radio = document.createElement('input');
-            radio.type = 'radio';
-            radio.id = `stream-${streamType.id}`;
-            radio.name = 'stream-type';
-            radio.value = streamType.id;
-            radio.disabled = !isUnlocked;
-            
-            const label = document.createElement('label');
-            label.htmlFor = `stream-${streamType.id}`;
-            
-            if (isUnlocked) {
-                label.textContent = `${streamType.name} ($${streamType.cost}, -${streamType.energyCost} energy/s)`;
-            } else {
-                label.textContent = `${streamType.name} (Unlock at ${streamType.unlockAt} subs)`;
-                option.style.opacity = '0.5';
+            if (!isUnlocked) {
+                card.classList.add('disabled');
             }
             
-            option.appendChild(radio);
-            option.appendChild(label);
-            streamOptionsContainer.appendChild(option);
+            // Set selected state
+            if (streamType.id === this.selectedStreamType && isUnlocked) {
+                card.classList.add('selected');
+            }
+            
+            if (isUnlocked) {
+                card.innerHTML = `
+                    <div class="card-header">
+                        <div class="card-title">${streamType.name}</div>
+                        <div class="card-emoji">${streamTypeEmojis[streamType.id] || '🎥'}</div>
+                    </div>
+                    <div class="card-stats">
+                        <span>Cost: $${streamType.cost}</span>
+                        <span>Energy: -${streamType.energyCost}/s</span>
+                        <span>Base Viewers: ${streamType.baseViewers}</span>
+                    </div>
+                `;
+                
+                card.addEventListener('click', () => {
+                    this.selectStreamType(streamType.id);
+                });
+            } else {
+                card.innerHTML = `
+                    <div class="card-header">
+                        <div class="card-title">${streamType.name}</div>
+                        <div class="card-emoji">${streamTypeEmojis[streamType.id] || '🎥'}</div>
+                    </div>
+                    <div class="card-unlock-info">
+                        Unlock at ${streamType.unlockAt} subscribers
+                    </div>
+                `;
+            }
+            
+            cardsContainer.appendChild(card);
         });
+        
+        this.updateQuickSwitchControls();
+    }
+    
+    static selectStreamType(streamTypeId) {
+        // Remove selected class from all cards
+        document.querySelectorAll('.stream-type-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+        
+        // Find and select the new card
+        const cards = document.querySelectorAll('.stream-type-card');
+        const streamTypeIndex = CONFIG.STREAM_TYPES.findIndex(type => type.id === streamTypeId);
+        if (streamTypeIndex !== -1 && cards[streamTypeIndex]) {
+            cards[streamTypeIndex].classList.add('selected');
+        }
+        
+        this.selectedStreamType = streamTypeId;
+        localStorage.setItem('selectedStreamType', streamTypeId);
+        
+        this.updateQuickSwitchControls();
+    }
+    
+    static updateQuickSwitchControls() {
+        const quickSwitchControls = document.getElementById('quick-switch-controls');
+        const quickSwitchButtons = document.getElementById('quick-switch-buttons');
+        
+        // Show quick switch only when streaming
+        if (GAME.currentStream && GAME.currentStream.active) {
+            quickSwitchControls.style.display = 'block';
+            quickSwitchButtons.innerHTML = '';
+            
+            // Create buttons for other unlocked stream types
+            CONFIG.STREAM_TYPES.forEach(streamType => {
+                if (streamType.id === GAME.currentStream.type) return; // Skip current type
+                
+                const isUnlocked = streamType.unlocked || 
+                    (streamType.unlockAt && GAME.player.subscribers >= streamType.unlockAt);
+                
+                if (isUnlocked) {
+                    const btn = document.createElement('button');
+                    btn.className = 'quick-switch-btn';
+                    btn.textContent = streamType.name;
+                    btn.onclick = () => this.switchStreamType(streamType.id);
+                    
+                    // Check if player can afford the switch
+                    const canAfford = GAME.player.money >= streamType.cost;
+                    const hasEnergy = GAME.player.energy >= 10; // Cost for switching
+                    
+                    if (!canAfford || !hasEnergy) {
+                        btn.disabled = true;
+                        btn.title = !canAfford ? `Need $${streamType.cost}` : 'Need more energy';
+                    }
+                    
+                    quickSwitchButtons.appendChild(btn);
+                }
+            });
+        } else {
+            quickSwitchControls.style.display = 'none';
+        }
+    }
+      static switchStreamType(newStreamType) {
+        if (!GAME.currentStream || !GAME.currentStream.active) return;
+        
+        const streamTypeConfig = CONFIG.STREAM_TYPES.find(type => type.id === newStreamType);
+        if (!streamTypeConfig) return;
+        
+        // Check costs
+        if (!GAME.player.spendMoney(streamTypeConfig.cost)) {
+            this.showNotificationWithType("Not enough money to switch stream type!", 'error');
+            return;
+        }
+        
+        if (GAME.player.energy < 10) {
+            this.showNotificationWithType("Not enough energy to switch stream type!", 'error');
+            return;
+        }
+        
+        // Add loading effect to the target card
+        const cards = document.querySelectorAll('.stream-type-card');
+        const streamTypeIndex = CONFIG.STREAM_TYPES.findIndex(type => type.id === newStreamType);
+        if (streamTypeIndex !== -1 && cards[streamTypeIndex]) {
+            cards[streamTypeIndex].classList.add('loading');
+        }
+        
+        // Apply switch cost and change type
+        GAME.player.useEnergy(10);
+        GAME.currentStream.type = newStreamType;
+        
+        // Update display with delay for better UX
+        setTimeout(() => {
+            if (streamTypeIndex !== -1 && cards[streamTypeIndex]) {
+                cards[streamTypeIndex].classList.remove('loading');
+            }
+            
+            this.updateStreamDisplay(newStreamType);
+            this.selectStreamType(newStreamType);
+            this.logEvent(`Switched to ${streamTypeConfig.name} stream!`);
+            this.showNotificationWithType(`Switched to ${streamTypeConfig.name}!`, 'success');
+            
+            // Recalculate energy drain rate for new stream type
+            GAME.currentStream.calculateEnergyDrainRate(streamTypeConfig);
+            
+            // Update quick switch controls
+            this.updateQuickSwitchControls();
+            
+            // Add pulse effect to viewer count to indicate potential change
+            this.addPulseEffect('viewers-count');
+        }, 300);
     }
     
     static createShopItems() {
@@ -191,19 +395,17 @@ class UI {
         // Check for newly unlocked stream types
         this.checkStreamUnlocks();
     }
-    
-    static checkStreamUnlocks() {
+      static checkStreamUnlocks() {
         CONFIG.STREAM_TYPES.forEach(streamType => {
             if (streamType.unlockAt && !streamType.unlocked && 
                 GAME.player.subscribers >= streamType.unlockAt) {
                 streamType.unlocked = true;
                 this.showNotification(`${streamType.name} streams unlocked!`);
-                this.createStreamOptions(); // Refresh options
+                this.createStreamTypeCards(); // Refresh cards
             }
         });
     }
-    
-    static updateStreamDisplay(streamType) {
+      static updateStreamDisplay(streamType) {
         const streamVideoFeed = document.getElementById('stream-video-feed');
         
         if (!streamType) {
@@ -233,6 +435,11 @@ class UI {
                 content = '<div class="stream-generic">🎥 Live Stream</div>';
         }
         
+        // Add swipe hint for mobile users when streaming
+        if (window.innerWidth <= 768 && GAME.currentStream && GAME.currentStream.active) {
+            content += '<div class="swipe-hint">Swipe to switch</div>';
+        }
+        
         streamVideoFeed.innerHTML = content;
     }
     
@@ -256,17 +463,25 @@ class UI {
             timerElement.style.color = '#ffffff';
         }
     }
-    
-    static toggleStreamControls(isStreaming) {
+      static toggleStreamControls(isStreaming) {
         document.getElementById('start-stream').disabled = isStreaming;
         document.getElementById('end-stream').disabled = !isStreaming;
         document.getElementById('active-rest').disabled = isStreaming; // Enable/disable rest button
         
-        const streamOptions = document.getElementById('stream-options');
-        const radioButtons = streamOptions.querySelectorAll('input[type="radio"]');
-        radioButtons.forEach(radio => {
-            radio.disabled = isStreaming;
+        // Update stream type cards - disable switching when not streaming
+        const streamTypeCards = document.querySelectorAll('.stream-type-card:not(.disabled)');
+        streamTypeCards.forEach(card => {
+            if (isStreaming) {
+                card.style.pointerEvents = 'none';
+                card.style.opacity = '0.7';
+            } else {
+                card.style.pointerEvents = 'auto';
+                card.style.opacity = '1';
+            }
         });
+        
+        // Update quick switch controls
+        this.updateQuickSwitchControls();
     }
     
     static highlightEndStream() {
@@ -310,6 +525,32 @@ class UI {
         setTimeout(() => {
             notification.remove();
         }, 5000);
+    }
+    
+    static showNotificationWithType(message, type = 'info') {
+        const notificationArea = document.getElementById('notification-area');
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.textContent = message;
+        
+        notificationArea.appendChild(notification);
+        
+        // Remove after 5 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 5000);
+    }
+    
+    static addPulseEffect(elementId) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.classList.add('pulse');
+            setTimeout(() => {
+                element.classList.remove('pulse');
+            }, 3000);
+        }
     }
     
     static showDonation(amount) {

@@ -31,12 +31,20 @@
                     <!-- Shop items will be populated by JS -->
                 </div>
             </div>
-        </div>
-        <div id="controls-panel">
-            <button id="start-stream">Start Stream</button>
-            <button id="end-stream" disabled>End Stream</button>
-            <button id="active-rest" disabled>Rest</button>
-            <div id="stream-options"></div>
+        </div>        <div id="controls-panel">
+            <div id="main-controls">
+                <button id="start-stream">Start Stream</button>
+                <button id="end-stream" disabled>End Stream</button>
+                <button id="active-rest" disabled>Rest</button>
+            </div>
+            <div id="stream-type-selector">
+                <h3>Stream Type</h3>
+                <div id="stream-type-cards"></div>
+                <div id="quick-switch-controls" style="display: none;">
+                    <span>Switch to:</span>
+                    <div id="quick-switch-buttons"></div>
+                </div>
+            </div>
         </div>
         <div id="events-log"></div>
         <div id="notification-area"></div>
