@@ -10,6 +10,10 @@ class Stream {
         this.timer = null;
         this.events = [];
         this.eventTimers = [];
+        this.viewerRetention = CONFIG.VIEWER_RETENTION_BASE;
+        this.peakViewers = 0;
+        this.viewerHistory = [];
+        this.energyDrainRate = CONFIG.ENERGY_DEPLETION_BASE;
     }
     
     start(streamType) {
@@ -28,18 +32,20 @@ class Stream {
             UI.showNotification("Not enough energy to start streaming!");
             return false;
         }
-        
-        // Set stream properties
+          // Set stream properties
         this.active = true;
         this.startTime = new Date();
         this.type = streamType;
         this.currentViewers = this.calculateStartingViewers(streamTypeConfig);
+        this.peakViewers = this.currentViewers;
+        this.viewerHistory = [this.currentViewers];
         
-        // Random duration between min and max
-        this.targetDuration = Math.floor(
-            Math.random() * (CONFIG.STREAM_MAX_DURATION - CONFIG.STREAM_MIN_DURATION + 1) + 
-            CONFIG.STREAM_MIN_DURATION
-        );
+        // Set target duration based on config
+        this.targetDuration = CONFIG.STREAM_MIN_DURATION + 
+            Math.random() * (CONFIG.STREAM_MAX_DURATION - CONFIG.STREAM_MIN_DURATION);
+        
+        // Calculate energy drain rate based on stream type and skills
+        this.calculateEnergyDrainRate(streamTypeConfig);
         
         // Use energy
         GAME.player.useEnergy(streamTypeConfig.energyCost);
@@ -147,6 +153,30 @@ class Stream {
         return Math.floor(viewers);
     }
     
+    calculateEnergyDrainRate(streamTypeConfig) {
+        let drainRate = streamTypeConfig.energyCost / 30; // Base rate
+        
+        // Skill reduces energy drain
+        const relevantSkillLevel = this.getRelevantSkillLevel();
+        drainRate *= (1.2 - (relevantSkillLevel * 0.1)); // Up to 50% reduction at skill 5
+        
+        // Reputation makes streaming less tiring
+        drainRate *= (1 - (GAME.player.reputation / 200)); // Up to 50% reduction at 100 rep
+        
+        this.energyDrainRate = Math.max(0.1, drainRate); // Minimum drain rate
+    }
+    
+    getRelevantSkillLevel() {
+        const skillMap = {
+            "gaming": "gaming",
+            "justchatting": "talking",
+            "music": "talking",
+            "artstream": "creativity",
+            "coding": "technical"
+        };
+        return GAME.player.getSkillLevel(skillMap[this.type] || "talking");
+    }
+    
     calculateRewards() {
         const rewards = {
             money: 0,
@@ -154,35 +184,47 @@ class Stream {
             reputation: 0
         };
         
-        // Did stream meet target duration?
-        const durationFactor = Math.min(this.duration / this.targetDuration, 1.0);
+        // Enhanced duration factor calculation
+        const actualDuration = this.duration;
+        const targetCompletion = actualDuration / this.targetDuration;
+        const durationFactor = Math.min(targetCompletion, 1.0);
         
-        // Money from subscribers (based on current total subs and duration)
-        rewards.money = GAME.player.subscribers * CONFIG.SUBSCRIBER_VALUE * (this.duration / 60);
+        // Average viewers throughout stream
+        const avgViewers = this.viewerHistory.length > 0 
+            ? this.viewerHistory.reduce((a, b) => a + b, 0) / this.viewerHistory.length 
+            : 0;
         
-        // Money from donations (already accumulated during stream)
-        // Add current money earned from donations
-        rewards.money = Math.floor(rewards.money);
+        // Money calculation with viewer average
+        const baseMoneyPerMinute = GAME.player.subscribers * CONFIG.SUBSCRIBER_VALUE;
+        const viewerBonus = avgViewers * 0.1; // Extra money from viewers
+        rewards.money = Math.floor((baseMoneyPerMinute + viewerBonus) * (actualDuration / 60) * durationFactor);
         
-        // New subscribers based on performance
-        // A simple formula: 1 new sub per 50 average viewers, adjusted by reputation and duration factor
-        // We use currentViewers as a proxy for average viewers for now.
-        // Ensure currentViewers is not zero to avoid division by zero if stream ends abruptly with 0 viewers.
-        if (this.currentViewers > 0) {
-            const baseNewSubs = (this.currentViewers / 50); 
-            const reputationBonus = (GAME.player.reputation / 100) + 0.5; // Min 0.5, Max 1.5 multiplier
-            rewards.subscribers = Math.floor(baseNewSubs * durationFactor * reputationBonus);
-        } else {
-            rewards.subscribers = 0; // No new subs if stream ended with no viewers
+        // Subscriber calculation with better formula
+        if (avgViewers > 0) {
+            const baseNewSubs = (avgViewers / 30); // 1 sub per 30 average viewers
+            const reputationMultiplier = 0.5 + (GAME.player.reputation / 100); // 0.5x to 1.5x
+            const peakViewerBonus = (this.peakViewers / 100) * 0.5; // Bonus for high peak
+            
+            rewards.subscribers = Math.floor(
+                (baseNewSubs + peakViewerBonus) * durationFactor * reputationMultiplier
+            );
         }
         
-        // Reputation change
+        // Reputation changes
         if (durationFactor >= 0.9) {
-            // Met or exceeded target duration - reputation boost
-            rewards.reputation = 2;
+            rewards.reputation = 3; // Better reward for completing streams
+        } else if (durationFactor >= 0.7) {
+            rewards.reputation = 1;
+        } else if (durationFactor < 0.3) {
+            rewards.reputation = -5; // Harsh penalty for very short streams
         } else if (durationFactor < 0.5) {
-            // Stream was too short - reputation hit
-            rewards.reputation = -3;
+            rewards.reputation = -2;
+        }
+        
+        // Bonus reputation for high viewer retention
+        const retentionRate = this.currentViewers / Math.max(this.peakViewers, 1);
+        if (retentionRate > 0.8 && this.peakViewers > 20) {
+            rewards.reputation += 2;
         }
         
         return rewards;
@@ -191,11 +233,38 @@ class Stream {
     updateViewers() {
         if (!this.active) return;
         
-        // Random fluctuation in viewers
-        const fluctuation = Math.random() > 0.5 ? 1 : -1;
-        const changeAmount = Math.floor(Math.random() * 3) * fluctuation;
+        // Calculate viewer retention
+        const baseRetention = CONFIG.VIEWER_RETENTION_BASE;
+        const repBonus = GAME.player.reputation * CONFIG.VIEWER_RETENTION_REPUTATION_BONUS;
+        const skillBonus = this.getRelevantSkillLevel() * 0.05;
         
-        this.currentViewers = Math.max(0, this.currentViewers + changeAmount);
+        this.viewerRetention = Math.min(0.95, baseRetention + repBonus + skillBonus);
+        
+        // Apply retention
+        let newViewerCount = this.currentViewers;
+        
+        // Each viewer has a chance to leave
+        for (let i = 0; i < this.currentViewers; i++) {
+            if (Math.random() > this.viewerRetention) {
+                newViewerCount--;
+            }
+        }
+        
+        // Chance for new viewers based on chat momentum
+        if (CHAT_MANAGER.momentum > 5) {
+            const growthChance = CONFIG.VIEWER_GROWTH_MOMENTUM * (CHAT_MANAGER.momentum / 10);
+            if (Math.random() < growthChance) {
+                newViewerCount += Math.floor(Math.random() * 3) + 1;
+            }
+        }
+        
+        // Random fluctuation
+        const fluctuation = Math.floor(Math.random() * 3) - 1; // -1 to +1
+        newViewerCount = Math.max(0, newViewerCount + fluctuation);
+        
+        this.currentViewers = newViewerCount;
+        this.viewerHistory.push(this.currentViewers);
+        this.peakViewers = Math.max(this.peakViewers, this.currentViewers);
         
         // Check for donations
         this.checkForDonations();
@@ -248,9 +317,8 @@ class Stream {
                 UI.highlightEndStream();
             }
             
-            // Use energy during stream more rapidly
-            // Target: 100 energy in 30 seconds => 100/30 = 3.33 energy per second
-            GAME.player.useEnergy(10/3); 
+            // Dynamic energy usage based on calculated drain rate
+            GAME.player.useEnergy(this.energyDrainRate);
             if (GAME.player.energy <= 0) {
                 UI.logEvent("You're exhausted! Stream ended abruptly.");
                 CHAT_MANAGER.stopChatting(); // Stop chat if stream ends due to exhaustion
@@ -258,9 +326,11 @@ class Stream {
             }
         }, 1000);
     }
-    
-    clearTimers() {
-        clearInterval(this.timer);
+      clearTimers() {
+        if (this.timer) {
+            clearInterval(this.timer);
+            this.timer = null;
+        }
         this.eventTimers.forEach(timer => clearTimeout(timer));
         this.eventTimers = [];
     }

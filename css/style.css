@@ -259,6 +259,7 @@ button:disabled {
         grid-template-rows: auto auto auto auto auto; /* Adjust rows for stacking */
         max-width: 100%;
         padding: 5px;
+        gap: 10px; /* Reduced gap for mobile */
     }
 
     #stream-display {
@@ -266,50 +267,232 @@ button:disabled {
         grid-row: 1;
         flex-direction: column; /* Stack video over chat */
         height: auto; /* Adjust height for stacked content */
+        min-height: 400px; /* Ensure minimum height */
     }
 
     #stream-video-feed {
-        height: 300px; /* Fixed height for video in portrait */
+        height: 250px; /* Reduced for better mobile fit */
         width: 100%;
+        font-size: 20px; /* Slightly smaller for mobile */
     }
 
     #chat-log {
         width: 100%; /* Chat takes full width */
-        height: 200px; /* Fixed height for chat in portrait */
+        height: 150px; /* Reduced height for mobile */
         border-left: none; /* No left border when full width */
         border-top: 1px solid #303030; /* Add top border instead */
-        flex-direction: column; /* Ensure it's also column for responsive, if not inheriting */
+        font-size: 12px; /* Smaller font for mobile */
+        padding: 8px;
+    }
+
+    .chat-message {
+        margin-bottom: 6px;
+        line-height: 1.3;
     }
 
     #sidebar {
         grid-column: 1;
         grid-row: 2; /* Sidebar below stream display */
-        flex-direction: column; /* Ensure stats and shop stack if needed */
+        gap: 10px;
     }
     
-    #stats-panel, #shop-panel {
-        width: 100%; /* Make panels full width */
+    #stats-panel {
+        padding: 12px;
+        font-size: 16px;
+    }
+    
+    .stat-item {
+        font-size: 16px;
+        display: flex;
+        justify-content: space-between;
     }
 
     #controls-panel {
         grid-column: 1;
         grid-row: 3; /* Controls below sidebar */
+        padding: 12px;
+        justify-content: center;
     }
 
     #events-log {
         grid-column: 1;
         grid-row: 4; /* Events log at the bottom */
-        height: 120px; /* Slightly reduce height for smaller screens */
+        height: 100px; /* Slightly reduce height for smaller screens */
+        font-size: 14px;
     }
 
     button {
-        padding: 12px 15px; /* Slightly larger buttons for touch */
+        padding: 14px 20px; /* Slightly larger buttons for touch */
+        font-size: 16px;
+        min-width: 120px;
+        touch-action: manipulation; /* Prevent zoom on double tap */
     }
 
     #notification-area {
-        width: 90%;
-        left: 5%;
-        right: 5%;
+        width: calc(100% - 20px);
+        left: 10px;
+        right: 10px;
         top: 10px;
     }
+
+    .notification {
+        padding: 12px;
+        font-size: 14px;
+    }
+
+    #shop-panel {
+        padding: 12px;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .shop-item {
+        padding: 8px;
+        font-size: 14px;
+    }
+
+    .shop-item h4 {
+        font-size: 16px;
+        margin-bottom: 5px;
+    }
+
+    .shop-item button {
+        padding: 10px;
+        min-width: 80px;
+    }
+
+    #stream-options {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .stream-option {
+        padding: 8px;
+        background-color: #1f1f1f;
+        border-radius: 4px;
+        margin: 3px 0;
+    }
+
+    .stream-option label {
+        font-size: 14px;
+        flex-grow: 1;
+        padding-left: 10px;
+    }
+
+    /* Touch-friendly radio buttons */
+    .stream-option input[type="radio"] {
+        width: 20px;
+        height: 20px;
+    }
+
+    /* Improve stream overlay visibility on mobile */
+    #stream-overlay {
+        background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, transparent 100%);
+        padding: 8px;
+    }
+
+    #viewers-count, #stream-timer {
+        font-size: 14px;
+        font-weight: bold;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    }
+}
+
+/* Chat enhancements */
+.chat-message {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.chat-username {
+    text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
+}
+
+/* Emote styling */
+.chat-emote {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    vertical-align: middle;
+    margin: 0 2px;
+}
+
+/* Subscriber badge */
+.subscriber-badge {
+    display: inline-block;
+    background-color: #9147ff;
+    color: white;
+    font-size: 10px;
+    padding: 1px 4px;
+    border-radius: 3px;
+    margin-right: 4px;
+    vertical-align: middle;
+}
+
+/* Tutorial overlay */
+.tutorial-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+}
+
+.tutorial-content {
+    background-color: #252525;
+    padding: 30px;
+    border-radius: 10px;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+    text-align: center;
+}
+
+.tutorial-content h2 {
+    color: #9147ff;
+    margin-bottom: 20px;
+}
+
+.tutorial-content p {
+    margin-bottom: 15px;
+    line-height: 1.6;
+}
+
+/* Energy bar visualization */
+.energy-bar {
+    width: 100%;
+    height: 8px;
+    background-color: #333;
+    border-radius: 4px;
+    margin-top: 5px;
+    overflow: hidden;
+}
+
+.energy-fill {
+    height: 100%;
+    background-color: #00ff00;
+    transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.energy-fill.low {
+    background-color: #ff4444;
+}
+
+.energy-fill.medium {
+    background-color: #ffaa00;
 }

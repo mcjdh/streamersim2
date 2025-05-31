@@ -4,6 +4,8 @@ class Game {
         this.currentStream = new Stream();
         this.energyRecoveryTimer = null;
         this.isActive = false;
+        this.sessionStartTime = Date.now();
+        this.firstStream = true;
     }
     
     init() {
@@ -18,7 +20,14 @@ class Game {
         // Set initial UI state
         UI.updateStats();
         UI.updateStreamDisplay();
-        UI.logEvent("Welcome to Streamer Simulator 2! Start streaming to grow your channel.");
+        
+        // Personalized welcome message
+        const welcomeMessages = [
+            "Welcome to Streamer Simulator 2! Start streaming to grow your channel.",
+            "Ready to become the next big streamer? Choose a stream type and go live!",
+            "Your streaming journey begins now. Build your audience one stream at a time!"
+        ];
+        UI.logEvent(welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)]);
     }
     
     reset() {
@@ -32,6 +41,7 @@ class Game {
     startStream(streamType) {
         if (!this.player.canStream()) {
             UI.showNotification("You don't have enough energy to stream!");
+            UI.logEvent("💡 Tip: Use the Rest button to recover energy faster!");
             return false;
         }
         
@@ -41,6 +51,15 @@ class Game {
         // Start the stream
         if (this.currentStream.start(streamType)) {
             UI.toggleStreamControls(true);
+            
+            // First stream hint
+            if (this.firstStream) {
+                this.firstStream = false;
+                setTimeout(() => {
+                    UI.logEvent("💡 Tip: End your stream before running out of energy!");
+                }, 5000);
+            }
+            
             return true;
         }
         
@@ -117,8 +136,22 @@ class Game {
 
         const energyGained = CONFIG.ACTIVE_REST_ENERGY_GAIN;
         this.player.recoverEnergy(energyGained);
-        UI.logEvent(`Took a short rest and recovered ${energyGained} energy.`);
-        // Optionally, add a small time passage or a cooldown in the future
+        
+        // Random rest messages
+        const restMessages = [
+            `Took a quick break and recovered ${energyGained} energy.`,
+            `Recharged with a power nap! +${energyGained} energy.`,
+            `Grabbed a snack and recovered ${energyGained} energy.`,
+            `Stretched and recovered ${energyGained} energy.`
+        ];
+        UI.logEvent(restMessages[Math.floor(Math.random() * restMessages.length)]);
+        
+        // Small chance for bonus energy
+        if (Math.random() < 0.1) {
+            const bonus = 5;
+            this.player.recoverEnergy(bonus);
+            UI.showNotification(`Feeling refreshed! Bonus +${bonus} energy!`);
+        }
     }
 }
 

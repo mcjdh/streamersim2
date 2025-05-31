@@ -1,5 +1,10 @@
 class UI {
     static init() {
+        // Show tutorial for new players
+        if (CONFIG.SHOW_TUTORIAL && !localStorage.getItem(CONFIG.TUTORIAL_SHOWN_KEY)) {
+            this.showTutorial();
+        }
+        
         // Initialize UI event listeners
         document.getElementById('start-stream').addEventListener('click', () => {
             const selectedStreamType = document.querySelector('input[name="stream-type"]:checked');
@@ -24,6 +29,76 @@ class UI {
         // Initial stats update
         this.updateStats();
         this.createShopItems();
+        
+        // Add energy bar visualization
+        this.createEnergyBar();
+        
+        // Add touch event handlers for mobile
+        this.initMobileControls();
+    }
+    
+    static showTutorial() {
+        const tutorialOverlay = document.createElement('div');
+        tutorialOverlay.className = 'tutorial-overlay';
+        
+        const tutorialContent = document.createElement('div');
+        tutorialContent.className = 'tutorial-content';
+        tutorialContent.innerHTML = `
+            <h2>Welcome to Streamer Simulator 2!</h2>
+            <p>Your goal is to become a successful streamer by reaching:</p>
+            <ul style="text-align: left; margin: 20px auto; max-width: 300px;">
+                <li>1,000 Subscribers</li>
+                <li>$5,000 in earnings</li>
+                <li>90 Reputation</li>
+            </ul>
+            <p><strong>How to Play:</strong></p>
+            <p>1. Choose a stream type and click "Start Stream"</p>
+            <p>2. Manage your energy - streaming drains it!</p>
+            <p>3. End streams before you run out of energy</p>
+            <p>4. Use the Rest button between streams</p>
+            <p>5. Buy upgrades to improve your channel</p>
+            <p>6. Watch chat for viewer reactions!</p>
+            <button id="tutorial-close">Let's Stream!</button>
+        `;
+        
+        tutorialOverlay.appendChild(tutorialContent);
+        document.body.appendChild(tutorialOverlay);
+        
+        document.getElementById('tutorial-close').addEventListener('click', () => {
+            document.body.removeChild(tutorialOverlay);
+            localStorage.setItem(CONFIG.TUTORIAL_SHOWN_KEY, 'true');
+        });
+    }
+    
+    static createEnergyBar() {
+        const energyStatItem = document.querySelector('#energy').parentElement;
+        const energyBar = document.createElement('div');
+        energyBar.className = 'energy-bar';
+        energyBar.innerHTML = '<div class="energy-fill"></div>';
+        energyStatItem.appendChild(energyBar);
+    }
+    
+    static initMobileControls() {
+        // Add haptic feedback for mobile devices
+        const buttons = document.querySelectorAll('button');
+        buttons.forEach(button => {
+            button.addEventListener('touchstart', () => {
+                if ('vibrate' in navigator) {
+                    navigator.vibrate(10);
+                }
+            });
+        });
+        
+        // Prevent accidental double-taps
+        let lastTap = 0;
+        document.addEventListener('touchend', (e) => {
+            const currentTime = new Date().getTime();
+            const tapLength = currentTime - lastTap;
+            if (tapLength < 500 && tapLength > 0) {
+                e.preventDefault();
+            }
+            lastTap = currentTime;
+        });
     }
     
     static createStreamOptions() {
@@ -33,15 +108,26 @@ class UI {
             const option = document.createElement('div');
             option.className = 'stream-option';
             
+            // Check if unlocked
+            const isUnlocked = streamType.unlocked || 
+                (streamType.unlockAt && GAME.player.subscribers >= streamType.unlockAt);
+            
             const radio = document.createElement('input');
             radio.type = 'radio';
             radio.id = `stream-${streamType.id}`;
             radio.name = 'stream-type';
             radio.value = streamType.id;
+            radio.disabled = !isUnlocked;
             
             const label = document.createElement('label');
             label.htmlFor = `stream-${streamType.id}`;
-            label.textContent = `${streamType.name} ($${streamType.cost}, -${streamType.energyCost} energy)`;
+            
+            if (isUnlocked) {
+                label.textContent = `${streamType.name} ($${streamType.cost}, -${streamType.energyCost} energy/s)`;
+            } else {
+                label.textContent = `${streamType.name} (Unlock at ${streamType.unlockAt} subs)`;
+                option.style.opacity = '0.5';
+            }
             
             option.appendChild(radio);
             option.appendChild(label);
@@ -86,6 +172,35 @@ class UI {
         document.getElementById('money').textContent = GAME.player.money;
         document.getElementById('reputation').textContent = GAME.player.reputation;
         document.getElementById('energy').textContent = Math.floor(GAME.player.energy);
+        
+        // Update energy bar
+        const energyPercent = (GAME.player.energy / GAME.player.maxEnergy) * 100;
+        const energyFill = document.querySelector('.energy-fill');
+        if (energyFill) {
+            energyFill.style.width = `${energyPercent}%`;
+            
+            // Change color based on energy level
+            energyFill.classList.remove('low', 'medium');
+            if (energyPercent < 30) {
+                energyFill.classList.add('low');
+            } else if (energyPercent < 60) {
+                energyFill.classList.add('medium');
+            }
+        }
+        
+        // Check for newly unlocked stream types
+        this.checkStreamUnlocks();
+    }
+    
+    static checkStreamUnlocks() {
+        CONFIG.STREAM_TYPES.forEach(streamType => {
+            if (streamType.unlockAt && !streamType.unlocked && 
+                GAME.player.subscribers >= streamType.unlockAt) {
+                streamType.unlocked = true;
+                this.showNotification(`${streamType.name} streams unlocked!`);
+                this.createStreamOptions(); // Refresh options
+            }
+        });
     }
     
     static updateStreamDisplay(streamType) {
@@ -131,6 +246,15 @@ class UI {
         const formattedTime = 
             `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
         document.getElementById('stream-timer').textContent = formattedTime;
+        
+        // Add visual indicator when approaching target duration
+        const targetReached = seconds >= GAME.currentStream.targetDuration;
+        const timerElement = document.getElementById('stream-timer');
+        if (targetReached) {
+            timerElement.style.color = '#00ff00';
+        } else {
+            timerElement.style.color = '#ffffff';
+        }
     }
     
     static toggleStreamControls(isStreaming) {
@@ -207,9 +331,8 @@ class UI {
         setTimeout(() => {
             donation.remove();
         }, 2000);
-        
-        UI.logEvent(`Received a $${amount} donation!`);
-        CHAT_MANAGER.postDonationReaction(GAME.player.username || "GenerousViewer", amount);
+          UI.logEvent(`Received a $${amount} donation!`);
+        CHAT_MANAGER.postDonationReaction("GenerousViewer", amount);
     }
     
     static addChatMessage(username, messageText, userColor = '#ffffff') {
@@ -217,15 +340,16 @@ class UI {
         const messageEntry = document.createElement('div');
         messageEntry.className = 'chat-message';
 
+        // Parse username for badges
         const userSpan = document.createElement('span');
         userSpan.className = 'chat-username';
-        userSpan.textContent = `${username}: `;
+        userSpan.innerHTML = `${username}: `; // Using innerHTML to support badges
         userSpan.style.color = userColor;
         userSpan.style.fontWeight = 'bold';
 
         const textSpan = document.createElement('span');
         textSpan.className = 'chat-text';
-        textSpan.textContent = messageText;
+        textSpan.innerHTML = messageText; // Using innerHTML to support emotes
 
         // Determine if chat should auto-scroll BEFORE appending the new message
         // and before removing old messages, as scrollHeight will change.
@@ -236,11 +360,11 @@ class UI {
         messageEntry.appendChild(textSpan);
         chatLog.appendChild(messageEntry);
 
-        // Limit chat log entries (removes from the top)
-        while (chatLog.children.length > CONFIG.LOG_MAX_ENTRIES) { 
+        // Limit chat messages for performance
+        while (chatLog.children.length > CONFIG.CHAT_MAX_ENTRIES) {
             chatLog.removeChild(chatLog.firstChild);
         }
-
+        
         // Auto-scroll to bottom only if user was already near the bottom
         if (isScrolledNearBottom) {
             chatLog.scrollTop = chatLog.scrollHeight - chatLog.clientHeight; // Precise scroll to bottom

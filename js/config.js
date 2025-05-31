@@ -1,7 +1,7 @@
 const CONFIG = {
     // Stream settings
-    STREAM_MIN_DURATION: 60, // in seconds
-    STREAM_MAX_DURATION: 180, // in seconds
+    STREAM_MIN_DURATION: 45, // Reduced for mobile sessions
+    STREAM_MAX_DURATION: 120, // Shorter max duration
     
     // Game balance
     STARTING_MONEY: 50,
@@ -9,13 +9,13 @@ const CONFIG = {
     STARTING_REPUTATION: 50,
     STARTING_ENERGY: 100,
     
-    // Stream content options
+    // Stream content options - Progressive unlocking
     STREAM_TYPES: [
-        { id: "gaming", name: "Gaming", cost: 0, energyCost: 5, baseViewers: 10 },
-        { id: "justchatting", name: "Just Chatting", cost: 0, energyCost: 3, baseViewers: 8 },
-        { id: "music", name: "Music", cost: 5, energyCost: 6, baseViewers: 12 },
-        { id: "artstream", name: "Art Stream", cost: 10, energyCost: 7, baseViewers: 15 },
-        { id: "coding", name: "Coding", cost: 0, energyCost: 8, baseViewers: 6 }
+        { id: "gaming", name: "Gaming", cost: 0, energyCost: 8, baseViewers: 10, unlocked: true },
+        { id: "justchatting", name: "Just Chatting", cost: 0, energyCost: 5, baseViewers: 8, unlocked: true },
+        { id: "music", name: "Music", cost: 5, energyCost: 10, baseViewers: 15, unlocked: false, unlockAt: 25 }, // Unlock at 25 subs
+        { id: "artstream", name: "Art Stream", cost: 10, energyCost: 12, baseViewers: 20, unlocked: false, unlockAt: 50 },
+        { id: "coding", name: "Coding", cost: 0, energyCost: 15, baseViewers: 8, unlocked: false, unlockAt: 100 }
     ],
     
     // Progression thresholds
@@ -26,28 +26,32 @@ const CONFIG = {
     },
     
     // Event probability
-    EVENT_CHANCE_PER_SECOND: 0.05,
+    EVENT_CHANCE_PER_SECOND: 0.08, // Increased for more dynamic gameplay
     
-    // Economy settings
-    SUBSCRIBER_VALUE: 2, // money per subscriber per stream
-    VIEWER_DONATION_CHANCE: 0.01, // chance per viewer per second
-    AVERAGE_DONATION_AMOUNT: [1, 20], // min/max range
-    LIVE_SUBSCRIBER_RATE: 0.0007, // Chance per viewer per second to subscribe live
+    // Economy settings - Rebalanced
+    SUBSCRIBER_VALUE: 1.5, // Slightly reduced
+    VIEWER_DONATION_CHANCE: 0.015, // Increased slightly
+    AVERAGE_DONATION_AMOUNT: [1, 25], // Increased max
+    LIVE_SUBSCRIBER_RATE: 0.001, // Slightly increased
     
-    // Energy recovery
-    ENERGY_RECOVERY_RATE: 15, // per minute offline
-    ENERGY_RECOVERY_INTERVAL: 5, // in seconds
+    // Energy recovery - Improved
+    ENERGY_RECOVERY_RATE: 20, // Faster recovery
+    ENERGY_RECOVERY_INTERVAL: 3, // More frequent updates
+    ENERGY_DEPLETION_BASE: 0.25, // Base energy loss per second while streaming
     
     // Misc
-    LOG_MAX_ENTRIES: 100,
+    LOG_MAX_ENTRIES: 50, // Reduced for mobile performance
+    CHAT_MAX_ENTRIES: 30, // Limit chat messages
 
-    // Subscriber Milestones
+    // Subscriber Milestones - More granular
     SUBSCRIBER_MILESTONES: [
-        { count: 10, description: "First milestone! Gained a small bonus.", rewards: { money: 50 } },
-        { count: 50, description: "Growing community! Your dedication is paying off.", rewards: { money: 200, maxEnergyBonus: 5 } },
-        { count: 100, description: "Serious streamer! You've hit 100 subscribers!", rewards: { money: 500, reputation: 5 } },
-        { count: 250, description: "Fan Favorite! Your channel is booming.", rewards: { money: 1000, reputation: 10 } }, // We can add item/stream unlocks here later
-        { count: 500, description: "Streaming Star! Halfway to the win condition!", rewards: { money: 2500, maxEnergyBonus: 10, reputation: 10 } }
+        { count: 10, description: "First milestone! Your journey begins.", rewards: { money: 50 } },
+        { count: 25, description: "Growing fast! Music streams unlocked!", rewards: { money: 100, maxEnergyBonus: 5 } },
+        { count: 50, description: "Solid fanbase! Art streams unlocked!", rewards: { money: 200, reputation: 5 } },
+        { count: 100, description: "Triple digits! Coding streams unlocked!", rewards: { money: 500, reputation: 10, maxEnergyBonus: 10 } },
+        { count: 250, description: "Rising star! Your dedication shows.", rewards: { money: 1000, reputation: 10 } },
+        { count: 500, description: "Half way there! Keep pushing!", rewards: { money: 2000, maxEnergyBonus: 15, reputation: 15 } },
+        { count: 750, description: "Almost famous! The finish line is near.", rewards: { money: 3000, reputation: 20 } }
     ],
 
     // Subscriber Churn Settings (Post-Stream)
@@ -56,9 +60,22 @@ const CONFIG = {
     BAD_STREAM_CHURN_BASE_PERCENT: 0.05, // Base 5% of subs at risk after a bad stream
     CHURN_REPUTATION_MITIGATION_FACTOR: 0.005, // Churn % is reduced by (Reputation * this_factor). E.g. 100 Rep * 0.005 = 0.5 reduction from base rate.
     MAX_CHURN_PERCENT_CAP: 0.10, // Max 10% of subs can be lost in one event
-
+    
     // Active Rest Settings
-    ACTIVE_REST_ENERGY_GAIN: 20 // Energy gained per click of the Rest button
+    ACTIVE_REST_ENERGY_GAIN: 20, // Energy gained per click of the Rest button
+
+    // Chat momentum settings
+    CHAT_MOMENTUM_MULTIPLIER: 0.1, // Viewer boost per active chat message
+    CHAT_DECAY_RATE: 0.95, // How fast chat momentum decays
+    
+    // Viewer retention
+    VIEWER_RETENTION_BASE: 0.7, // Base chance viewer stays each update
+    VIEWER_RETENTION_REPUTATION_BONUS: 0.002, // Bonus per reputation point
+    VIEWER_GROWTH_MOMENTUM: 0.3, // Chance of gaining viewers when chat is active
+    
+    // Tutorial
+    SHOW_TUTORIAL: true,
+    TUTORIAL_SHOWN_KEY: 'streamerSim2TutorialShown'
 };
 
 CONFIG.SHOP_ITEMS = [
