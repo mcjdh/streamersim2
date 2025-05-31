@@ -247,12 +247,12 @@ body {
 .stream-type-card.disabled {
     opacity: 0.5;
     cursor: not-allowed;
-    background-color: #1a1a1a;
+    background-color: var(--bg-primary);
 }
 
 .stream-type-card.disabled:hover {
-    border-color: #303030;
-    background-color: #1a1a1a;
+    border-color: var(--border-color);
+    background-color: var(--bg-primary);
 }
 
 .card-header {
@@ -265,7 +265,7 @@ body {
 .card-title {
     font-weight: bold;
     font-size: 16px;
-    color: #ffffff;
+    color: var(--text-primary);
 }
 
 .card-emoji {
@@ -276,12 +276,12 @@ body {
     display: flex;
     justify-content: space-between;
     font-size: 12px;
-    color: #aaa;
+    color: var(--text-muted);
 }
 
 .card-unlock-info {
     text-align: center;
-    color: #888;
+    color: var(--text-muted);
     font-size: 12px;
     font-style: italic;
 }
@@ -393,27 +393,28 @@ button:disabled {
 }
 
 .notification {
-    background-color: #9147ff;
-    color: white;
+    background-color: var(--accent-primary);
+    color: var(--text-primary);
     padding: 15px;
     margin-bottom: 10px;
     border-radius: 5px;
     animation: fadeOut 5s forwards;
+    border: 1px solid var(--border-color);
 }
 
 .notification.success {
     background-color: #00ff88;
-    color: #000;
+    color: #000000;
 }
 
 .notification.warning {
     background-color: #ff8800;
-    color: #000;
+    color: #000000;
 }
 
 .notification.error {
     background-color: #ff4444;
-    color: #fff;
+    color: #ffffff;
 }
 
 @keyframes fadeOut {
@@ -438,7 +439,7 @@ button:disabled {
 }
 
 @keyframes highlight {
-    from { background-color: #9147ff; }
+    from { background-color: var(--accent-primary); }
     to { background-color: #ff4747; }
 }
 
@@ -451,28 +452,30 @@ button:disabled {
 
 .offline-message {
     font-size: 24px;
-    color: #666;
+    color: var(--text-muted);
     text-align: center;
 }
 
 .timestamp {
-    color: #9147ff;
+    color: var(--accent-primary);
     font-weight: bold;
     margin-right: 5px;
 }
 
 #shop-panel {
-    background-color: #252525;
+    background-color: var(--bg-tertiary);
     padding: 15px;
     border-radius: 5px;
+    border: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
     gap: 10px;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 #shop-panel h2 {
     margin-bottom: 10px;
-    color: #9147ff;
+    color: var(--accent-primary);
 }
 
 #shop-items-container {
@@ -482,10 +485,11 @@ button:disabled {
 }
 
 .shop-item {
-    border: 1px solid #303030;
+    border: 1px solid var(--border-color);
     padding: 10px;
     border-radius: 4px;
-    background-color: #1f1f1f;
+    background-color: var(--bg-secondary);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .shop-item p {
@@ -500,13 +504,14 @@ button:disabled {
 #chat-log {
     width: 250px;
     height: 100%;
-    background-color: #18181b;
-    border-left: 1px solid #303030;
+    background-color: var(--bg-primary);
+    border-left: 1px solid var(--border-color);
     padding: 10px;
     overflow-y: auto;
     font-size: 14px;
     display: flex;
     flex-direction: column;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .chat-message {
