@@ -184,6 +184,11 @@ body {
     transform: scale(1.1);
 }
 
+.theme-toggle-btn:focus {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
+}
+
 #controls-panel {
     grid-column: 1 / span 2;
     grid-row: 2;
@@ -234,6 +239,11 @@ body {
 .stream-type-card:hover {
     border-color: var(--accent-primary);
     background-color: var(--chat-hover);
+}
+
+.stream-type-card:focus {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
 }
 
 .stream-type-card.selected {
@@ -360,6 +370,11 @@ button {
 
 button:hover {
     background-color: var(--accent-hover);
+}
+
+button:focus {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
 }
 
 button:disabled {
@@ -814,6 +829,12 @@ button:disabled {
         right: 8px;
     }
     
+    /* Enhanced energy bar for mobile */
+    .energy-bar {
+        height: 10px;
+        margin-top: 8px;
+    }
+    
     button {
         padding: 16px 24px;
         font-size: 16px;
@@ -843,6 +864,14 @@ button:disabled {
         font-size: 15px;
         padding: 16px;
         margin-bottom: 12px;
+    }
+    
+    /* Optimize notification area for mobile */
+    #notification-area {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        width: auto;
     }
     
     /* Better spacing for portrait mobile */

@@ -219,8 +219,21 @@ class UI {    static init() {
                     </div>
                 `;
                 
+                // Add accessibility attributes
+                card.setAttribute('tabindex', '0');
+                card.setAttribute('role', 'button');
+                card.setAttribute('aria-label', `Select ${streamType.name} stream type. Cost: $${streamType.cost}`);
+                
                 card.addEventListener('click', () => {
                     this.selectStreamType(streamType.id);
+                });
+                
+                // Add keyboard support
+                card.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        this.selectStreamType(streamType.id);
+                    }
                 });
             } else {
                 card.innerHTML = `
