@@ -1,10 +1,16 @@
-class UI {    static init() {
+import { CONFIG } from './config/config.js';
+
+export class UI {
+    constructor(game) {
+        this.game = game;
+        this.selectedStreamType = localStorage.getItem('selectedStreamType') || 'gaming';
+    }
+    
+    init() {
         // Show tutorial for new players
         if (CONFIG.SHOW_TUTORIAL && !localStorage.getItem(CONFIG.TUTORIAL_SHOWN_KEY)) {
             this.showTutorial();
         }
-        
-        this.selectedStreamType = localStorage.getItem('selectedStreamType') || 'gaming';
         
         // Initialize dark mode
         this.initDarkMode();
@@ -12,18 +18,18 @@ class UI {    static init() {
         // Initialize UI event listeners
         document.getElementById('start-stream').addEventListener('click', () => {
             if (this.selectedStreamType) {
-                GAME.startStream(this.selectedStreamType);
+                this.game.startStream(this.selectedStreamType);
             } else {
                 this.showNotification("Select a stream type first!");
             }
         });
         
         document.getElementById('end-stream').addEventListener('click', () => {
-            GAME.endStream();
+            this.game.endStream();
         });
         
         document.getElementById('active-rest').addEventListener('click', () => {
-            GAME.performActiveRest(); // Call the new game method
+            this.game.performActiveRest();
         });
         
         // Dark mode toggle event listener
@@ -41,33 +47,27 @@ class UI {    static init() {
         // Add energy bar visualization
         this.createEnergyBar();
         
-        // Add touch event handlers for mobile
-        this.initMobileControls();
+        // Add keyboard controls for Pi5
+        this.initKeyboardControls();
     }
-      static showTutorial() {
+      showTutorial() {
         const tutorialOverlay = document.createElement('div');
         tutorialOverlay.className = 'tutorial-overlay';
         
         const tutorialContent = document.createElement('div');
         tutorialContent.className = 'tutorial-content';
         tutorialContent.innerHTML = `
-            <h2>Welcome to Streamer Simulator 2!</h2>
-            <p>Your goal is to become a successful streamer by reaching:</p>
-            <ul style="text-align: left; margin: 20px auto; max-width: 300px;">
-                <li>1,000 Subscribers</li>
-                <li>$5,000 in earnings</li>
-                <li>90 Reputation</li>
-            </ul>
-            <p><strong>How to Play:</strong></p>
-            <p>1. <strong>Select a stream type</strong> by clicking on a card</p>
-            <p>2. Click "Start Stream" to begin streaming</p>
-            <p>3. <strong>Switch stream types</strong> while live for variety!</p>
-            <p>4. End streams before you run out of energy</p>
-            <p>5. Use the Rest button between streams</p>
-            <p>6. Buy upgrades to improve your channel</p>
-            <p>7. Watch chat for viewer reactions!</p>
-            <p><strong>New:</strong> You can now change stream types while live!</p>
-            <button id="tutorial-close">Let's Stream!</button>
+            <h2>Streamer Sim 2 - Pi Edition</h2>
+            <p><strong>Goal:</strong> 1,000 subs, $5,000, 90 reputation</p>
+            <p><strong>Controls:</strong></p>
+            <p>• Click stream type → Start Stream</p>
+            <p>• Switch types while live for variety</p>
+            <p>• Rest when energy is low</p>
+            <p>• Buy upgrades to grow faster</p>
+            <p><strong>Keyboard shortcuts:</strong></p>
+            <p>Space: Start/End | R: Rest | 1-5: Stream types</p>
+            <p>Ctrl+S: Save | Ctrl+L: Load | ESC: Close dialogs</p>
+            <button id="tutorial-close">Start Streaming!</button>
         `;
         
         tutorialOverlay.appendChild(tutorialContent);
@@ -79,105 +79,85 @@ class UI {    static init() {
         });
     }
     
-    static createEnergyBar() {
+    createEnergyBar() {
         const energyStatItem = document.querySelector('#energy').parentElement;
         const energyBar = document.createElement('div');
         energyBar.className = 'energy-bar';
         energyBar.innerHTML = '<div class="energy-fill"></div>';
         energyStatItem.appendChild(energyBar);
     }
-      static initMobileControls() {
-        // Add haptic feedback for mobile devices
-        const buttons = document.querySelectorAll('button');
-        buttons.forEach(button => {
-            button.addEventListener('touchstart', () => {
-                if ('vibrate' in navigator) {
-                    navigator.vibrate(10);
-                }
-            });
-        });
-        
-        // Prevent accidental double-taps
-        let lastTap = 0;
-        document.addEventListener('touchend', (e) => {
-            const currentTime = new Date().getTime();
-            const tapLength = currentTime - lastTap;
-            if (tapLength < 300 && tapLength > 0) {
-                e.preventDefault();
+    initKeyboardControls() {
+        document.addEventListener('keydown', (e) => {
+            // Prevent shortcuts during tutorial or if input is focused
+            if (document.querySelector('.tutorial-overlay') || 
+                document.activeElement.tagName === 'INPUT') {
+                return;
             }
-            lastTap = currentTime;
-        });
-        
-        // Add swipe gesture for stream type switching (mobile only)
-        if (window.innerWidth <= 768) {
-            this.initSwipeGestures();
-        }
-        
-        // Handle orientation changes
-        window.addEventListener('orientationchange', () => {
-            setTimeout(() => {
-                this.handleOrientationChange();
-            }, 500);
-        });
-    }
-    
-    static initSwipeGestures() {
-        const streamDisplay = document.getElementById('stream-display');
-        let startX = 0;
-        let startY = 0;
-        let threshold = 100; // Minimum swipe distance
-        
-        streamDisplay.addEventListener('touchstart', (e) => {
-            startX = e.touches[0].clientX;
-            startY = e.touches[0].clientY;
-        }, { passive: true });
-        
-        streamDisplay.addEventListener('touchend', (e) => {
-            if (!GAME.currentStream || !GAME.currentStream.active) return;
             
-            const endX = e.changedTouches[0].clientX;
-            const endY = e.changedTouches[0].clientY;
-            const deltaX = endX - startX;
-            const deltaY = endY - startY;
-            
-            // Check if it's a horizontal swipe
-            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > threshold) {
-                const currentIndex = CONFIG.STREAM_TYPES.findIndex(type => type.id === GAME.currentStream.type);
-                const unlockedTypes = CONFIG.STREAM_TYPES.filter(type => 
-                    type.unlocked || (type.unlockAt && GAME.player.subscribers >= type.unlockAt)
-                );
-                
-                if (deltaX > 0) {
-                    // Swiped right - next stream type
-                    const nextIndex = (currentIndex + 1) % unlockedTypes.length;
-                    if (unlockedTypes[nextIndex] && unlockedTypes[nextIndex].id !== GAME.currentStream.type) {
-                        this.switchStreamType(unlockedTypes[nextIndex].id);
+            switch(e.key.toLowerCase()) {
+                case ' ': // Space - Start/End stream
+                    e.preventDefault();
+                    if (this.game.currentStream.active) {
+                        document.getElementById('end-stream').click();
+                    } else {
+                        document.getElementById('start-stream').click();
                     }
-                } else {
-                    // Swiped left - previous stream type
-                    const prevIndex = currentIndex - 1 < 0 ? unlockedTypes.length - 1 : currentIndex - 1;
-                    if (unlockedTypes[prevIndex] && unlockedTypes[prevIndex].id !== GAME.currentStream.type) {
-                        this.switchStreamType(unlockedTypes[prevIndex].id);
+                    break;
+                case 'r': // R - Rest
+                    e.preventDefault();
+                    document.getElementById('active-rest').click();
+                    break;
+                case '1': // Stream type shortcuts
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                    e.preventDefault();
+                    const streamIndex = parseInt(e.key) - 1;
+                    const streamTypes = CONFIG.STREAM_TYPES;
+                    if (streamIndex < streamTypes.length) {
+                        const streamType = streamTypes[streamIndex];
+                        const isUnlocked = streamType.unlocked || 
+                            (streamType.unlockAt && this.game.player.subscribers >= streamType.unlockAt);
+                        if (isUnlocked) {
+                            this.selectStreamType(streamType.id);
+                        }
                     }
-                }
+                    break;
+                case 'escape': // ESC - Close tutorial/notifications
+                    e.preventDefault();
+                    const tutorial = document.querySelector('.tutorial-overlay');
+                    if (tutorial) {
+                        tutorial.querySelector('button').click();
+                    }
+                    break;
+                case 's': // S - Save game (Ctrl+S)
+                    if (e.ctrlKey) {
+                        e.preventDefault();
+                        this.saveGame();
+                    }
+                    break;
+                case 'l': // L - Load game (Ctrl+L)
+                    if (e.ctrlKey) {
+                        e.preventDefault();
+                        this.loadGame();
+                    }
+                    break;
             }
-        }, { passive: true });
+        });
     }
     
-    static handleOrientationChange() {
-        // Adjust layout for orientation changes
-        const gameContainer = document.getElementById('game-container');
-        if (window.innerHeight < window.innerWidth && window.innerWidth <= 768) {
-            // Landscape mobile mode
-            gameContainer.style.gridTemplateColumns = '1fr 1fr';
-            gameContainer.style.gridTemplateRows = 'auto auto auto';
-        } else {
-            // Portrait mode - reset to default mobile layout
-            gameContainer.style.gridTemplateColumns = '1fr';
-            gameContainer.style.gridTemplateRows = 'auto auto auto auto auto';        }
+    saveGame() {
+        this.game.saveManager.saveGame();
     }
     
-    static createStreamTypeCards() {
+    loadGame() {
+        this.game.saveManager.loadGame();
+    }
+    
+    // Mobile functions removed - Pi5 desktop only
+    
+    createStreamTypeCards() {
         const cardsContainer = document.getElementById('stream-type-cards');
         cardsContainer.innerHTML = '';
         
@@ -195,7 +175,7 @@ class UI {    static init() {
             
             // Check if unlocked
             const isUnlocked = streamType.unlocked || 
-                (streamType.unlockAt && GAME.player.subscribers >= streamType.unlockAt);
+                (streamType.unlockAt && this.game.player.subscribers >= streamType.unlockAt);
             
             if (!isUnlocked) {
                 card.classList.add('disabled');
@@ -253,7 +233,7 @@ class UI {    static init() {
         this.updateQuickSwitchControls();
     }
     
-    static selectStreamType(streamTypeId) {
+    selectStreamType(streamTypeId) {
         // Remove selected class from all cards
         document.querySelectorAll('.stream-type-card').forEach(card => {
             card.classList.remove('selected');
@@ -272,21 +252,21 @@ class UI {    static init() {
         this.updateQuickSwitchControls();
     }
     
-    static updateQuickSwitchControls() {
+    updateQuickSwitchControls() {
         const quickSwitchControls = document.getElementById('quick-switch-controls');
         const quickSwitchButtons = document.getElementById('quick-switch-buttons');
         
         // Show quick switch only when streaming
-        if (GAME.currentStream && GAME.currentStream.active) {
+        if (this.game.currentStream && this.game.currentStream.active) {
             quickSwitchControls.style.display = 'block';
             quickSwitchButtons.innerHTML = '';
             
             // Create buttons for other unlocked stream types
             CONFIG.STREAM_TYPES.forEach(streamType => {
-                if (streamType.id === GAME.currentStream.type) return; // Skip current type
+                if (streamType.id === this.game.currentStream.type) return; // Skip current type
                 
                 const isUnlocked = streamType.unlocked || 
-                    (streamType.unlockAt && GAME.player.subscribers >= streamType.unlockAt);
+                    (streamType.unlockAt && this.game.player.subscribers >= streamType.unlockAt);
                 
                 if (isUnlocked) {
                     const btn = document.createElement('button');
@@ -295,8 +275,8 @@ class UI {    static init() {
                     btn.onclick = () => this.switchStreamType(streamType.id);
                     
                     // Check if player can afford the switch
-                    const canAfford = GAME.player.money >= streamType.cost;
-                    const hasEnergy = GAME.player.energy >= 10; // Cost for switching
+                    const canAfford = this.game.player.money >= streamType.cost;
+                    const hasEnergy = this.game.player.energy >= 10; // Cost for switching
                     
                     if (!canAfford || !hasEnergy) {
                         btn.disabled = true;
@@ -310,19 +290,19 @@ class UI {    static init() {
             quickSwitchControls.style.display = 'none';
         }
     }
-      static switchStreamType(newStreamType) {
-        if (!GAME.currentStream || !GAME.currentStream.active) return;
+      switchStreamType(newStreamType) {
+        if (!this.game.currentStream || !this.game.currentStream.active) return;
         
         const streamTypeConfig = CONFIG.STREAM_TYPES.find(type => type.id === newStreamType);
         if (!streamTypeConfig) return;
         
         // Check costs
-        if (!GAME.player.spendMoney(streamTypeConfig.cost)) {
+        if (!this.game.player.spendMoney(streamTypeConfig.cost)) {
             this.showNotificationWithType("Not enough money to switch stream type!", 'error');
             return;
         }
         
-        if (GAME.player.energy < 10) {
+        if (this.game.player.energy < 10) {
             this.showNotificationWithType("Not enough energy to switch stream type!", 'error');
             return;
         }
@@ -335,8 +315,8 @@ class UI {    static init() {
         }
         
         // Apply switch cost and change type
-        GAME.player.useEnergy(10);
-        GAME.currentStream.type = newStreamType;
+        this.game.player.useEnergy(10);
+        this.game.currentStream.type = newStreamType;
         
         // Update display with delay for better UX
         setTimeout(() => {
@@ -350,7 +330,7 @@ class UI {    static init() {
             this.showNotificationWithType(`Switched to ${streamTypeConfig.name}!`, 'success');
             
             // Recalculate energy drain rate for new stream type
-            GAME.currentStream.calculateEnergyDrainRate(streamTypeConfig);
+            this.game.currentStream.calculateEnergyDrainRate(streamTypeConfig);
             
             // Update quick switch controls
             this.updateQuickSwitchControls();
@@ -360,7 +340,7 @@ class UI {    static init() {
         }, 300);
     }
     
-    static createShopItems() {
+    createShopItems() {
         const shopItemsContainer = document.getElementById('shop-items-container');
         shopItemsContainer.innerHTML = ''; // Clear existing items
 
@@ -380,7 +360,7 @@ class UI {    static init() {
             const buyButton = document.createElement('button');
             buyButton.textContent = "Buy";
             buyButton.onclick = () => {
-                GAME.player.buyItem(item.id);
+                this.game.player.buyItem(item.id);
                 // Future: Could update shop UI here if item is single purchase
             };
 
@@ -392,14 +372,14 @@ class UI {    static init() {
         });
     }
     
-    static updateStats() {
-        document.getElementById('subscribers').textContent = GAME.player.subscribers;
-        document.getElementById('money').textContent = GAME.player.money;
-        document.getElementById('reputation').textContent = GAME.player.reputation;
-        document.getElementById('energy').textContent = Math.floor(GAME.player.energy);
+    updateStats() {
+        document.getElementById('subscribers').textContent = this.game.player.subscribers;
+        document.getElementById('money').textContent = this.game.player.money;
+        document.getElementById('reputation').textContent = this.game.player.reputation;
+        document.getElementById('energy').textContent = Math.floor(this.game.player.energy);
         
         // Update energy bar
-        const energyPercent = (GAME.player.energy / GAME.player.maxEnergy) * 100;
+        const energyPercent = (this.game.player.energy / this.game.player.maxEnergy) * 100;
         const energyFill = document.querySelector('.energy-fill');
         if (energyFill) {
             energyFill.style.width = `${energyPercent}%`;
@@ -416,17 +396,17 @@ class UI {    static init() {
         // Check for newly unlocked stream types
         this.checkStreamUnlocks();
     }
-      static checkStreamUnlocks() {
+      checkStreamUnlocks() {
         CONFIG.STREAM_TYPES.forEach(streamType => {
             if (streamType.unlockAt && !streamType.unlocked && 
-                GAME.player.subscribers >= streamType.unlockAt) {
+                this.game.player.subscribers >= streamType.unlockAt) {
                 streamType.unlocked = true;
                 this.showNotification(`${streamType.name} streams unlocked!`);
                 this.createStreamTypeCards(); // Refresh cards
             }
         });
     }
-      static updateStreamDisplay(streamType) {
+      updateStreamDisplay(streamType) {
         const streamVideoFeed = document.getElementById('stream-video-feed');
         
         if (!streamType) {
@@ -456,19 +436,14 @@ class UI {    static init() {
                 content = '<div class="stream-generic">🎥 Live Stream</div>';
         }
         
-        // Add swipe hint for mobile users when streaming
-        if (window.innerWidth <= 768 && GAME.currentStream && GAME.currentStream.active) {
-            content += '<div class="swipe-hint">Swipe to switch</div>';
-        }
-        
         streamVideoFeed.innerHTML = content;
     }
     
-    static updateViewerCount(count) {
+    updateViewerCount(count) {
         document.getElementById('viewers-count').textContent = `Viewers: ${count}`;
     }
     
-    static updateStreamTimer(seconds) {
+    updateStreamTimer(seconds) {
         const minutes = Math.floor(seconds / 60);
         const remainingSeconds = seconds % 60;
         const formattedTime = 
@@ -476,7 +451,7 @@ class UI {    static init() {
         document.getElementById('stream-timer').textContent = formattedTime;
         
         // Add visual indicator when approaching target duration
-        const targetReached = seconds >= GAME.currentStream.targetDuration;
+        const targetReached = seconds >= this.game.currentStream.targetDuration;
         const timerElement = document.getElementById('stream-timer');
         if (targetReached) {
             timerElement.style.color = '#00ff00';
@@ -484,7 +459,7 @@ class UI {    static init() {
             timerElement.style.color = '#ffffff';
         }
     }
-      static toggleStreamControls(isStreaming) {
+      toggleStreamControls(isStreaming) {
         document.getElementById('start-stream').disabled = isStreaming;
         document.getElementById('end-stream').disabled = !isStreaming;
         document.getElementById('active-rest').disabled = isStreaming; // Enable/disable rest button
@@ -505,7 +480,7 @@ class UI {    static init() {
         this.updateQuickSwitchControls();
     }
     
-    static highlightEndStream() {
+    highlightEndStream() {
         const endStreamButton = document.getElementById('end-stream');
         endStreamButton.classList.add('highlight');
         setTimeout(() => {
@@ -513,7 +488,7 @@ class UI {    static init() {
         }, 500);
     }
     
-    static logEvent(message) {
+    logEvent(message) {
         const eventsLog = document.getElementById('events-log');
         const entry = document.createElement('div');
         entry.className = 'event-entry';
@@ -534,7 +509,7 @@ class UI {    static init() {
         eventsLog.scrollTop = eventsLog.scrollHeight;
     }
     
-    static showNotification(message) {
+    showNotification(message) {
         const notificationArea = document.getElementById('notification-area');
         const notification = document.createElement('div');
         notification.className = 'notification';
@@ -548,7 +523,7 @@ class UI {    static init() {
         }, 5000);
     }
     
-    static showNotificationWithType(message, type = 'info') {
+    showNotificationWithType(message, type = 'info') {
         const notificationArea = document.getElementById('notification-area');
         const notification = document.createElement('div');
         notification.className = `notification ${type}`;
@@ -564,7 +539,7 @@ class UI {    static init() {
         }, 5000);
     }
     
-    static addPulseEffect(elementId) {
+    addPulseEffect(elementId) {
         const element = document.getElementById(elementId);
         if (element) {
             element.classList.add('pulse');
@@ -574,7 +549,7 @@ class UI {    static init() {
         }
     }
     
-    static showDonation(amount) {
+    showDonation(amount) {
         const streamVideoFeed = document.getElementById('stream-video-feed');
         const donation = document.createElement('div');
         donation.className = 'donation-animation';
@@ -593,11 +568,11 @@ class UI {    static init() {
         setTimeout(() => {
             donation.remove();
         }, 2000);
-          UI.logEvent(`Received a $${amount} donation!`);
-        CHAT_MANAGER.postDonationReaction("GenerousViewer", amount);
+          this.logEvent(`Received a $${amount} donation!`);
+        this.game.chatManager.postDonationReaction("GenerousViewer", amount);
     }
     
-    static addChatMessage(username, messageText, userColor = '#ffffff') {
+    addChatMessage(username, messageText, userColor = '#ffffff') {
         const chatLog = document.getElementById('chat-log');
         const messageEntry = document.createElement('div');
         messageEntry.className = 'chat-message';
@@ -633,7 +608,7 @@ class UI {    static init() {
         }
     }
     
-    static showVictoryScreen() {
+    showVictoryScreen() {
         const gameContainer = document.getElementById('game-container');
         
         // Create victory overlay
@@ -659,12 +634,12 @@ class UI {    static init() {
             <h2>You've become a successful streamer!</h2>
             <p style="margin: 20px 0;">Final stats:</p>
             <ul style="list-style: none; padding: 0; text-align: center; margin-bottom: 20px;">
-                <li>Subscribers: ${GAME.player.subscribers}</li>
-                <li>Money: $${GAME.player.money}</li>
-                <li>Reputation: ${GAME.player.reputation}</li>
-                <li>Streams completed: ${GAME.player.stats.streamsCompleted}</li>
-                <li>Total streaming time: ${Math.floor(GAME.player.stats.totalStreamTime / 60)} minutes</li>
-                <li>Peak viewers: ${GAME.player.stats.maxViewers}</li>
+                <li>Subscribers: ${this.game.player.subscribers}</li>
+                <li>Money: $${this.game.player.money}</li>
+                <li>Reputation: ${this.game.player.reputation}</li>
+                <li>Streams completed: ${this.game.player.stats.streamsCompleted}</li>
+                <li>Total streaming time: ${Math.floor(this.game.player.stats.totalStreamTime / 60)} minutes</li>
+                <li>Peak viewers: ${this.game.player.stats.maxViewers}</li>
             </ul>
             <button id="play-again" style="margin-top: 20px;">Play Again</button>
         `;
@@ -675,11 +650,11 @@ class UI {    static init() {
         // Add event listener to play again button
         document.getElementById('play-again').addEventListener('click', () => {
             document.body.removeChild(victoryOverlay);
-            GAME.reset();
+            this.game.reset();
         });
     }
     
-    static initDarkMode() {
+    initDarkMode() {
         // Get saved theme preference or detect system preference
         const savedTheme = localStorage.getItem('theme');
         const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -701,7 +676,7 @@ class UI {    static init() {
         });
     }
     
-    static setTheme(theme) {
+    setTheme(theme) {
         document.documentElement.setAttribute('data-theme', theme);
         
         // Update toggle button icon
@@ -712,7 +687,7 @@ class UI {    static init() {
         }
     }
     
-    static toggleDarkMode() {
+    toggleDarkMode() {
         const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
         const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
         

@@ -1,5 +1,9 @@
-class ChatManager {
-    constructor() {
+import { CONFIG } from '../config/config.js';
+
+export class ChatManager {
+    constructor(game, ui) {
+        this.game = game;
+        this.ui = ui;
         this.chatTimer = null;
         this.momentum = 0; // Chat activity momentum
         this.lastMessageTime = Date.now();
@@ -103,7 +107,7 @@ class ChatManager {
     generateChatMessage(streamType, customUsername = null, customMessage = null) {
         const username = customUsername || this.generateRandomUsername();
         const userColor = this.getRandomElement(this.userColors);
-        const isSub = Math.random() < (Math.min(GAME.player.subscribers, 100) / 200); // Up to 50% chance at 100 subs
+        const isSub = Math.random() < (Math.min(this.game.player.subscribers, 100) / 200); // Up to 50% chance at 100 subs
         
         let messageText = customMessage;
 
@@ -127,13 +131,13 @@ class ChatManager {
         // Update momentum
         this.updateMomentum();
         
-        UI.addChatMessage(displayUsername, messageText, userColor);
+        this.ui.addChatMessage(displayUsername, messageText, userColor);
     }
     
     getContextualMessage() {
-        const viewers = GAME.currentStream.currentViewers;
-        const energy = GAME.player.energy;
-        const streamTime = GAME.currentStream.active ? (Date.now() - GAME.currentStream.startTime) / 1000 : 0;
+        const viewers = this.game.currentStream.currentViewers;
+        const energy = this.game.player.energy;
+        const streamTime = this.game.currentStream.active ? (Date.now() - this.game.currentStream.startTime) / 1000 : 0;
         
         if (viewers < 5) {
             return this.getRandomElement(this.contextualMessages.lowViewers);
@@ -178,11 +182,11 @@ class ChatManager {
         this.lastMessageTime = now;
         
         // Apply momentum effect to viewer count
-        if (GAME.currentStream.active && this.momentum > 5) {
+        if (this.game.currentStream.active && this.momentum > 5) {
             const viewerBoost = Math.floor(this.momentum * CONFIG.CHAT_MOMENTUM_MULTIPLIER);
             if (Math.random() < CONFIG.VIEWER_GROWTH_MOMENTUM) {
-                GAME.currentStream.currentViewers += viewerBoost;
-                UI.updateViewerCount(GAME.currentStream.currentViewers);
+                this.game.currentStream.currentViewers += viewerBoost;
+                this.ui.updateViewerCount(this.game.currentStream.currentViewers);
             }
         }
     }
@@ -206,7 +210,7 @@ class ChatManager {
                 clearInterval(this.chatTimer);
             }
             
-            const viewers = GAME.currentStream.currentViewers;
+            const viewers = this.game.currentStream.currentViewers;
             const baseFrequency = 3000; // 3 seconds
             const minFrequency = 1000; // 1 second
             
@@ -242,13 +246,13 @@ class ChatManager {
             `Big love to ${donatorName} for the $${amount}!!! ❤️`
         ];
         const reactionUser = this.generateRandomUsername(); // A random chatter reacts
-        this.generateChatMessage(GAME.currentStream.type, reactionUser, this.getRandomElement(messages));
+        this.generateChatMessage(this.game.currentStream.type, reactionUser, this.getRandomElement(messages));
         
         // Maybe a second, slightly delayed reaction
         if (Math.random() < 0.5) {
             setTimeout(() => {
                 const anotherUser = this.generateRandomUsername();
-                this.generateChatMessage(GAME.currentStream.type, anotherUser, "So generous!");
+                this.generateChatMessage(this.game.currentStream.type, anotherUser, "So generous!");
             }, Math.random() * 1000 + 500);
         }
     }
@@ -267,7 +271,7 @@ class ChatManager {
                 break;
             case "trolls":
                 reactionMessages = ["Not the trolls! 😠", "Ban hammer incoming?", "Ignore the trolls!", "Mods, do your thing!"];
-                if (GAME.player.reputation > 70) reactionMessages.push("Our community is strong! 💪");
+                if (this.game.player.reputation > 70) reactionMessages.push("Our community is strong! 💪");
                 break;
             case "viral_moment":
                 reactionMessages = ["OMG WE WENT VIRAL! 🚀", "TO THE MOON! 🌕", "Clip it and ship it! Viral!", "This is insane! PogChamp"];
@@ -284,7 +288,7 @@ class ChatManager {
 
         if (reactionMessages.length > 0) {
             const reactionUser = this.generateRandomUsername();
-            this.generateChatMessage(GAME.currentStream.type, reactionUser, this.getRandomElement(reactionMessages));
+            this.generateChatMessage(this.game.currentStream.type, reactionUser, this.getRandomElement(reactionMessages));
         }
     }
 
@@ -293,15 +297,14 @@ class ChatManager {
         const subMessage = this.getRandomElement(this.subMessages).replace('{months}', months);
         const subscriber = this.generateRandomUsername();
         
-        this.generateChatMessage(GAME.currentStream.type, subscriber, subMessage);
+        this.generateChatMessage(this.game.currentStream.type, subscriber, subMessage);
         
         // Follow-up hype
         setTimeout(() => {
             const hypeUser = this.generateRandomUsername();
-            this.generateChatMessage(GAME.currentStream.type, hypeUser, "New sub! Welcome! 🎉");
+            this.generateChatMessage(this.game.currentStream.type, hypeUser, "New sub! Welcome! 🎉");
         }, 500);
     }
 }
 
-// Initialize the global chat manager
-const CHAT_MANAGER = new ChatManager();
+// Chat manager is now created as an instance in Game class

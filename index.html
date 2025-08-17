@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Streamer Simulator 2</title>
+    <meta name="viewport" content="width=640, initial-scale=1.0, user-scalable=no">
+    <title>Streamer Simulator 2 - Pi Edition</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -51,13 +51,7 @@
         <div id="notification-area"></div>
     </div>
 
-    <!-- Core game engine -->
-    <script src="js/config.js"></script>
-    <script src="js/events.js"></script>
-    <script src="js/player.js"></script>
-    <script src="js/stream.js"></script>
-    <script src="js/chat.js"></script>
-    <script src="js/ui.js"></script>
-    <script src="js/game.js"></script>
+    <!-- ES Module entry point -->
+    <script type="module" src="js/main.js"></script>
 </body>
 </html>

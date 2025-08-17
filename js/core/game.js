@@ -1,7 +1,24 @@
-class Game {
+import { CONFIG } from '../config/config.js';
+import { Player } from './player.js';
+import { Stream } from './stream.js';
+import { ModularUI } from '../ui/ModularUI.js';
+import { ChatManager } from '../systems/chat.js';
+import { EventManager } from '../systems/events.js';
+import { SaveManager } from '../systems/SaveManager.js';
+
+export class Game {
     constructor() {
-        this.player = new Player();
-        this.currentStream = new Stream();
+        this.ui = new ModularUI(this);
+        // Create player with UI callbacks
+        this.player = new Player({
+            updateStats: () => this.ui.updateStats(),
+            showNotification: (message) => this.ui.showNotification(message),
+            logEvent: (message) => this.ui.logEvent(message)
+        });
+        this.currentStream = new Stream(this, this.ui);
+        this.chatManager = new ChatManager(this, this.ui);
+        this.eventManager = new EventManager(this, this.ui);
+        this.saveManager = new SaveManager(this);
         this.energyRecoveryTimer = null;
         this.isActive = false;
         this.sessionStartTime = Date.now();
@@ -11,15 +28,18 @@ class Game {
     init() {
         // Initialize the game
         this.player.reset();
-        UI.init();
+        this.ui.init();
         this.isActive = true;
         
         // Start energy recovery when not streaming
         this.startEnergyRecovery();
         
+        // Start auto-save
+        this.saveManager.startAutoSave();
+        
         // Set initial UI state
-        UI.updateStats();
-        UI.updateStreamDisplay();
+        this.ui.updateStats();
+        this.ui.updateStreamDisplay();
         
         // Personalized welcome message
         const welcomeMessages = [
@@ -27,21 +47,21 @@ class Game {
             "Ready to become the next big streamer? Choose a stream type and go live!",
             "Your streaming journey begins now. Build your audience one stream at a time!"
         ];
-        UI.logEvent(welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)]);
+        this.ui.logEvent(welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)]);
     }
     
     reset() {
         // Reset the game state
         this.player.reset();
-        UI.updateStats();
-        UI.updateStreamDisplay();
-        UI.logEvent("Game reset. Good luck on your streaming journey!");
+        this.ui.updateStats();
+        this.ui.updateStreamDisplay();
+        this.ui.logEvent("Game reset. Good luck on your streaming journey!");
     }
     
     startStream(streamType) {
         if (!this.player.canStream()) {
-            UI.showNotification("You don't have enough energy to stream!");
-            UI.logEvent("💡 Tip: Use the Rest button to recover energy faster!");
+            this.ui.showNotification("You don't have enough energy to stream!");
+            this.ui.logEvent("💡 Tip: Use the Rest button to recover energy faster!");
             return false;
         }
         
@@ -50,13 +70,13 @@ class Game {
         
         // Start the stream
         if (this.currentStream.start(streamType)) {
-            UI.toggleStreamControls(true);
+            this.ui.toggleStreamControls(true);
             
             // First stream hint
             if (this.firstStream) {
                 this.firstStream = false;
                 setTimeout(() => {
-                    UI.logEvent("💡 Tip: End your stream before running out of energy!");
+                    this.ui.logEvent("💡 Tip: End your stream before running out of energy!");
                 }, 5000);
             }
             
@@ -68,7 +88,7 @@ class Game {
     
     endStream() {
         if (this.currentStream.end()) {
-            UI.toggleStreamControls(false);
+            this.ui.toggleStreamControls(false);
             
             // Resume energy recovery
             this.startEnergyRecovery();
@@ -101,15 +121,28 @@ class Game {
         }
     }
     
+    startAutoSave() {
+        this.saveManager.startAutoSave();
+    }
+    
+    stopAutoSave() {
+        this.saveManager.stopAutoSave();
+    }
+    
+    autoSave() {
+        this.saveManager.autoSave();
+    }
+    
     victory() {
         this.isActive = false;
         this.stopEnergyRecovery();
+        this.saveManager.stopAutoSave();
         if (this.currentStream.active) {
             this.endStream();
         }
         
-        UI.logEvent("CONGRATULATIONS! You've become a successful streamer!");
-        UI.showVictoryScreen();
+        this.ui.logEvent("CONGRATULATIONS! You've become a successful streamer!");
+        this.ui.showVictoryScreen();
     }
     
     getGameStats() {
@@ -125,12 +158,12 @@ class Game {
 
     performActiveRest() {
         if (this.currentStream.active) {
-            UI.showNotification("Cannot rest while streaming!");
+            this.ui.showNotification("Cannot rest while streaming!");
             return;
         }
 
         if (this.player.energy >= this.player.maxEnergy) {
-            UI.showNotification("Energy is already full!");
+            this.ui.showNotification("Energy is already full!");
             return;
         }
 
@@ -144,68 +177,15 @@ class Game {
             `Grabbed a snack and recovered ${energyGained} energy.`,
             `Stretched and recovered ${energyGained} energy.`
         ];
-        UI.logEvent(restMessages[Math.floor(Math.random() * restMessages.length)]);
+        this.ui.logEvent(restMessages[Math.floor(Math.random() * restMessages.length)]);
         
         // Small chance for bonus energy
         if (Math.random() < 0.1) {
             const bonus = 5;
             this.player.recoverEnergy(bonus);
-            UI.showNotification(`Feeling refreshed! Bonus +${bonus} energy!`);
+            this.ui.showNotification(`Feeling refreshed! Bonus +${bonus} energy!`);
         }
     }
 }
 
-// Initialize the global game object and start the game when page loads
-const GAME = new Game();
-window.addEventListener('DOMContentLoaded', () => {
-    GAME.init();
-    
-    // Add CSS for donation animations
-    // const style = document.createElement('style');
-    // style.textContent = `
-    //     @keyframes donationFloat {
-    //         0% { transform: scale(0.5); opacity: 0; }
-    //         10% { transform: scale(1.2); opacity: 1; }
-    //         20% { transform: scale(1); opacity: 1; }
-    //         80% { transform: translateY(-20px); opacity: 1; }
-    //         100% { transform: translateY(-40px); opacity: 0; }
-    //     }
-    //     
-    //     .highlight {
-    //         animation: highlight 0.5s infinite alternate;
-    //     }
-    //     
-    //     @keyframes highlight {
-    //         from { background-color: #9147ff; }
-    //         to { background-color: #ff4747; }
-    //     }
-    //     
-    //     .stream-gaming, .stream-chat, .stream-music, .stream-art, .stream-coding {
-    //         font-size: 24px;
-    //         text-align: center;
-    //     }
-    //     
-    //     .stream-option {
-    //         display: flex;
-    //         align-items: center;
-    //         margin: 5px 0;
-    //     }
-    //     
-    //     .stream-option input {
-    //         margin-right: 5px;
-    //     }
-    //     
-    //     .offline-message {
-    //         font-size: 24px;
-    //         color: #666;
-    //         text-align: center;
-    //     }
-    //     
-    //     .timestamp {
-    //         color: #9147ff;
-    //         font-weight: bold;
-    //         margin-right: 5px;
-    //     }
-    // `;
-    // document.head.appendChild(style);
-});
+// Note: Game initialization is now handled by main.js

@@ -1,5 +1,12 @@
-class Player {
-    constructor() {
+import { CONFIG } from '../config/config.js';
+
+export class Player {
+    constructor(callbacks = {}) {
+        this.callbacks = {
+            updateStats: callbacks.updateStats || (() => {}),
+            showNotification: callbacks.showNotification || (() => {}),
+            logEvent: callbacks.logEvent || (() => {})
+        };
         this.money = 0;
         this.subscribers = 0;
         this.reputation = 0;
@@ -48,14 +55,14 @@ class Player {
     
     addMoney(amount) {
         this.money += amount;
-        UI.updateStats();
+        this.callbacks.updateStats();
         return amount;
     }
     
     spendMoney(amount) {
         if (this.money >= amount) {
             this.money -= amount;
-            UI.updateStats();
+            this.callbacks.updateStats();
             return true;
         }
         return false;
@@ -66,7 +73,7 @@ class Player {
         const oldSubscribers = this.subscribers;
         this.subscribers += amount;
         this.checkSubscriberMilestones(oldSubscribers);
-        UI.updateStats();
+        this.callbacks.updateStats();
         return amount;
     }
     
@@ -75,29 +82,29 @@ class Player {
         const lostSubs = Math.min(this.subscribers, amount); // Cannot lose more than current subs
         this.subscribers -= lostSubs;
         if (this.subscribers < 0) this.subscribers = 0; // Ensure subs don't go negative
-        UI.updateStats();
+        this.callbacks.updateStats();
         return lostSubs;
     }
     
     checkSubscriberMilestones(oldSubscribers) {
         CONFIG.SUBSCRIBER_MILESTONES.forEach(milestone => {
             if (this.subscribers >= milestone.count && oldSubscribers < milestone.count && !this.achievedMilestones.includes(milestone.count)) {
-                UI.showNotification(`MILESTONE: ${milestone.description}`);
+                this.callbacks.showNotification(`MILESTONE: ${milestone.description}`);
                 if (milestone.rewards.money) {
                     this.addMoney(milestone.rewards.money);
-                    UI.logEvent(`Gained $${milestone.rewards.money} from a subscriber milestone!`);
+                    this.callbacks.logEvent(`Gained $${milestone.rewards.money} from a subscriber milestone!`);
                 }
                 if (milestone.rewards.reputation) {
                     this.changeReputation(milestone.rewards.reputation);
-                    UI.logEvent(`Gained ${milestone.rewards.reputation} reputation from a subscriber milestone!`);
+                    this.callbacks.logEvent(`Gained ${milestone.rewards.reputation} reputation from a subscriber milestone!`);
                 }
                 if (milestone.rewards.maxEnergyBonus) {
                     this.maxEnergy += milestone.rewards.maxEnergyBonus;
                     this.energy = Math.min(this.maxEnergy, this.energy + milestone.rewards.maxEnergyBonus);
-                    UI.logEvent(`Max energy increased by ${milestone.rewards.maxEnergyBonus}! Current energy also boosted.`);
+                    this.callbacks.logEvent(`Max energy increased by ${milestone.rewards.maxEnergyBonus}! Current energy also boosted.`);
                 }
                 this.achievedMilestones.push(milestone.count);
-                UI.updateStats();
+                this.callbacks.updateStats();
             }
         });
     }
@@ -105,19 +112,19 @@ class Player {
     changeReputation(amount) {
         this.reputation += amount;
         this.reputation = Math.max(0, Math.min(100, this.reputation));
-        UI.updateStats();
+        this.callbacks.updateStats();
         return this.reputation;
     }
     
     useEnergy(amount) {
         this.energy -= amount;
         if (this.energy < 0) this.energy = 0;
-        UI.updateStats();
+        this.callbacks.updateStats();
     }
     
     recoverEnergy(amount) {
         this.energy = Math.min(this.maxEnergy, this.energy + amount);
-        UI.updateStats();
+        this.callbacks.updateStats();
     }
     
     improveSkill(skillName, amount) {
@@ -160,24 +167,24 @@ class Player {
             if (item.effect) {
                 if (item.effect.reputation) {
                     this.changeReputation(item.effect.reputation);
-                    UI.logEvent(`Purchased ${item.name}. Reputation increased by ${item.effect.reputation}.`);
+                    this.callbacks.logEvent(`Purchased ${item.name}. Reputation increased by ${item.effect.reputation}.`);
                 }
                 if (item.effect.skill && item.effect.amount) {
                     this.improveSkill(item.effect.skill, item.effect.amount);
-                    UI.logEvent(`Purchased ${item.name}. ${item.effect.skill} skill increased by ${item.effect.amount}.`);
+                    this.callbacks.logEvent(`Purchased ${item.name}. ${item.effect.skill} skill increased by ${item.effect.amount}.`);
                 }
                 if (item.effect.energy) {
                     this.recoverEnergy(item.effect.energy);
-                    UI.logEvent(`Purchased ${item.name}. Energy recovered by ${item.effect.energy}.`);
+                    this.callbacks.logEvent(`Purchased ${item.name}. Energy recovered by ${item.effect.energy}.`);
                 }
             }
 
             this.addToInventory(item); // Add item to inventory
-            // UI.updateShop(); // We'll need a way to indicate item is bought or remove it, for now it's re-buyable
-            UI.updateStats(); // spendMoney and effect applications already call this, but good to be sure.
+            // this.callbacks.updateShop(); // We'll need a way to indicate item is bought or remove it, for now it's re-buyable
+            this.callbacks.updateStats(); // spendMoney and effect applications already call this, but good to be sure.
             return true;
         } else {
-            UI.showNotification("Not enough money!");
+            this.callbacks.showNotification("Not enough money!");
             return false;
         }
     }

@@ -1,84 +1,42 @@
-/* CSS Custom Properties for Theme Support */
+/* Optimized CSS for 640x480 low-end hardware */
 :root {
-    /* Light theme colors (default) */
-    --bg-primary: #ffffff;
-    --bg-secondary: #f5f5f5;
-    --bg-tertiary: #e0e0e0;
-    --text-primary: #000000;
-    --text-secondary: #333333;
-    --text-muted: #666666;
-    --accent-primary: #9147ff;
-    --accent-hover: #7d2ae8;
-    --border-color: #cccccc;
-    --border-accent: #9147ff;
-    --disabled-bg: #999999;
-    --overlay-bg: rgba(255, 255, 255, 0.9);
-    --chat-hover: #f0f0f0;
-    --energy-gradient: linear-gradient(90deg, #00ff88, #9147ff);
-    --energy-medium: linear-gradient(90deg, #ff8800, #9147ff);
-    --energy-low: linear-gradient(90deg, #ff4444, #ff8800);
+    /* Light theme - minimal properties */
+    --bg: #fff;
+    --bg2: #f5f5f5;
+    --text: #000;
+    --text2: #333;
+    --accent: #9147ff;
+    --border: #ccc;
+    --energy-ok: #00ff88;
+    --energy-warn: #ff8800;
+    --energy-low: #ff4444;
 }
 
-/* Dark theme colors */
+/* Dark theme - minimal */
 @media (prefers-color-scheme: dark) {
     :root {
-        --bg-primary: #121212;
-        --bg-secondary: #1f1f1f;
-        --bg-tertiary: #252525;
-        --text-primary: #ffffff;
-        --text-secondary: #e0e0e0;
-        --text-muted: #999999;
-        --accent-primary: #9147ff;
-        --accent-hover: #7d2ae8;
-        --border-color: #303030;
-        --border-accent: #9147ff;
-        --disabled-bg: #666666;
-        --overlay-bg: rgba(0, 0, 0, 0.9);
-        --chat-hover: #2a2a2a;
-        --energy-gradient: linear-gradient(90deg, #00ff88, #9147ff);
-        --energy-medium: linear-gradient(90deg, #ff8800, #9147ff);
-        --energy-low: linear-gradient(90deg, #ff4444, #ff8800);
+        --bg: #121212;
+        --bg2: #1f1f1f;
+        --text: #fff;
+        --text2: #e0e0e0;
+        --border: #303030;
     }
 }
 
-/* Manual dark theme override */
 [data-theme="dark"] {
-    --bg-primary: #121212;
-    --bg-secondary: #1f1f1f;
-    --bg-tertiary: #252525;
-    --text-primary: #ffffff;
-    --text-secondary: #e0e0e0;
-    --text-muted: #999999;
-    --accent-primary: #9147ff;
-    --accent-hover: #7d2ae8;
-    --border-color: #303030;
-    --border-accent: #9147ff;
-    --disabled-bg: #666666;
-    --overlay-bg: rgba(0, 0, 0, 0.9);
-    --chat-hover: #2a2a2a;
-    --energy-gradient: linear-gradient(90deg, #00ff88, #9147ff);
-    --energy-medium: linear-gradient(90deg, #ff8800, #9147ff);
-    --energy-low: linear-gradient(90deg, #ff4444, #ff8800);
+    --bg: #121212;
+    --bg2: #1f1f1f;
+    --text: #fff;
+    --text2: #e0e0e0;
+    --border: #303030;
 }
 
-/* Manual light theme override */
 [data-theme="light"] {
-    --bg-primary: #ffffff;
-    --bg-secondary: #f5f5f5;
-    --bg-tertiary: #e0e0e0;
-    --text-primary: #000000;
-    --text-secondary: #333333;
-    --text-muted: #666666;
-    --accent-primary: #9147ff;
-    --accent-hover: #7d2ae8;
-    --border-color: #cccccc;
-    --border-accent: #9147ff;
-    --disabled-bg: #999999;
-    --overlay-bg: rgba(255, 255, 255, 0.9);
-    --chat-hover: #f0f0f0;
-    --energy-gradient: linear-gradient(90deg, #00ff88, #9147ff);
-    --energy-medium: linear-gradient(90deg, #ff8800, #9147ff);
-    --energy-low: linear-gradient(90deg, #ff4444, #ff8800);
+    --bg: #fff;
+    --bg2: #f5f5f5;
+    --text: #000;
+    --text2: #333;
+    --border: #ccc;
 }
 
 * {
@@ -89,41 +47,39 @@
 }
 
 body {
-    background-color: var(--bg-primary);
-    color: var(--text-primary);
-    transition: background-color 0.3s ease, color 0.3s ease;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 12px;
 }
 
 #game-container {
-    max-width: 1200px;
-    margin: 20px auto;
-    padding: 10px;
+    width: 640px;
+    height: 480px;
+    margin: 0;
+    padding: 4px;
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr;
-    grid-template-rows: auto auto auto;
-    gap: 15px;
+    grid-template-columns: 1fr 200px;
+    grid-template-rows: 140px 1fr 80px;
+    gap: 4px;
+    overflow: hidden;
 }
 
 #stream-display {
-    grid-column: 1 / span 2;
+    grid-column: 1;
     grid-row: 1;
-    background-color: var(--bg-secondary);
-    border-radius: 5px;
-    height: 450px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
     position: relative;
-    border: 2px solid var(--border-color);
     display: flex;
-    flex-direction: row;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
+    font-size: 11px;
 }
 
 #stream-video-feed {
-    flex-grow: 1;
-    height: 100%;
+    flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    position: relative;
+    font-size: 14px;
 }
 
 #stream-overlay {
@@ -131,335 +87,252 @@ body {
     top: 0;
     left: 0;
     width: 100%;
-    padding: 10px;
+    padding: 4px;
     display: flex;
     justify-content: space-between;
+    font-size: 10px;
+    background: rgba(0,0,0,0.5);
+    color: #fff;
 }
 
 #sidebar {
-    grid-column: 3;
+    grid-column: 2;
     grid-row: 1 / span 2;
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 4px;
+    font-size: 10px;
 }
 
 #stats-panel {
-    background-color: var(--bg-tertiary);
-    padding: 15px;
-    border-radius: 5px;
-    border: 1px solid var(--border-color);
-    transition: background-color 0.3s ease, border-color 0.3s ease;
+    background: var(--bg2);
+    padding: 4px;
+    border: 1px solid var(--border);
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 2px;
     position: relative;
+    flex-shrink: 0;
 }
 
 .stat-item {
-    font-size: 18px;
+    font-size: 10px;
+    line-height: 1.2;
 }
 
-/* Theme toggle button styling */
 .theme-toggle-btn {
     position: absolute;
-    top: 10px;
-    right: 10px;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: 50%;
-    width: 35px;
-    height: 35px;
+    top: 2px;
+    right: 2px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    width: 20px;
+    height: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 16px;
-    transition: all 0.3s ease;
+    font-size: 10px;
     padding: 0;
 }
 
 .theme-toggle-btn:hover {
-    background: var(--accent-primary);
-    transform: scale(1.1);
-}
-
-.theme-toggle-btn:focus {
-    outline: 2px solid var(--accent-primary);
-    outline-offset: 2px;
+    background: var(--accent);
 }
 
 #controls-panel {
-    grid-column: 1 / span 2;
+    grid-column: 1;
     grid-row: 2;
-    background-color: var(--bg-tertiary);
-    padding: 15px;
-    border-radius: 5px;
-    border: 1px solid var(--border-color);
+    background: var(--bg2);
+    padding: 4px;
+    border: 1px solid var(--border);
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
+    gap: 4px;
+    overflow-y: auto;
+    font-size: 10px;
 }
 
 #main-controls {
     display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
+    gap: 4px;
     justify-content: center;
+    flex-shrink: 0;
 }
 
 #stream-type-selector h3 {
-    color: var(--accent-primary);
-    margin-bottom: 10px;
+    color: var(--accent);
+    margin-bottom: 4px;
     text-align: center;
+    font-size: 11px;
 }
 
 #stream-type-cards {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 10px;
-    margin-bottom: 10px;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    margin-bottom: 4px;
 }
 
 .stream-type-card {
-    background-color: var(--bg-secondary);
-    border: 2px solid var(--border-color);
-    border-radius: 8px;
-    padding: 12px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 4px;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
-    min-height: 80px;
+    min-height: 40px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    font-size: 9px;
 }
 
 .stream-type-card:hover {
-    border-color: var(--accent-primary);
-    background-color: var(--chat-hover);
-}
-
-.stream-type-card:focus {
-    outline: 2px solid var(--accent-primary);
-    outline-offset: 2px;
+    border-color: var(--accent);
 }
 
 .stream-type-card.selected {
-    border-color: var(--accent-primary);
-    background-color: var(--chat-hover);
-}
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(145, 71, 255, 0.4);
+    border-color: var(--accent);
+    background: #f0f0f0;
 }
 
 .stream-type-card.disabled {
     opacity: 0.5;
     cursor: not-allowed;
-    background-color: var(--bg-primary);
-}
-
-.stream-type-card.disabled:hover {
-    border-color: var(--border-color);
-    background-color: var(--bg-primary);
 }
 
 .card-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 8px;
+    margin-bottom: 2px;
 }
 
 .card-title {
     font-weight: bold;
-    font-size: 16px;
-    color: var(--text-primary);
+    font-size: 9px;
+    color: var(--text);
 }
 
 .card-emoji {
-    font-size: 24px;
+    font-size: 12px;
 }
 
 .card-stats {
     display: flex;
     justify-content: space-between;
-    font-size: 12px;
-    color: var(--text-muted);
+    font-size: 8px;
+    color: var(--text2);
 }
 
 .card-unlock-info {
     text-align: center;
-    color: var(--text-muted);
-    font-size: 12px;
+    color: var(--text2);
+    font-size: 8px;
     font-style: italic;
 }
 
 #quick-switch-controls {
-    background-color: var(--bg-secondary);
-    padding: 10px;
-    border-radius: 5px;
-    border: 1px solid var(--accent-primary);
-    transition: background-color 0.3s ease;
+    background: var(--bg2);
+    padding: 4px;
+    border: 1px solid var(--accent);
+    font-size: 9px;
 }
 
 #quick-switch-controls span {
-    color: var(--accent-primary);
+    color: var(--accent);
     font-weight: bold;
-    margin-right: 10px;
+    margin-right: 4px;
 }
 
 #quick-switch-buttons {
     display: flex;
-    gap: 8px;
+    gap: 2px;
     flex-wrap: wrap;
-    margin-top: 8px;
+    margin-top: 4px;
 }
 
 .quick-switch-btn {
-    background-color: var(--accent-primary);
-    color: var(--text-primary);
+    background: var(--accent);
+    color: white;
     border: none;
-    padding: 6px 12px;
-    border-radius: 4px;
+    padding: 2px 6px;
     cursor: pointer;
-    font-size: 12px;
-    transition: background-color 0.2s;
-    position: relative;
-    overflow: hidden;
-}
-
-.quick-switch-btn:hover {
-    background-color: var(--accent-hover);
+    font-size: 9px;
 }
 
 .quick-switch-btn:disabled {
-    background-color: var(--disabled-bg);
+    opacity: 0.5;
     cursor: not-allowed;
 }
 
-.quick-switch-btn::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    transition: width 0.3s, height 0.3s;
-}
-
-.quick-switch-btn:active::after {
-    width: 120px;
-    height: 120px;
-}
-
 button {
-    padding: 10px 20px;
+    padding: 4px 8px;
     border: none;
-    border-radius: 4px;
-    background-color: var(--accent-primary);
-    color: var(--text-primary);
+    background: var(--accent);
+    color: white;
     font-weight: bold;
     cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-button:hover {
-    background-color: var(--accent-hover);
-}
-
-button:focus {
-    outline: 2px solid var(--accent-primary);
-    outline-offset: 2px;
+    font-size: 10px;
 }
 
 button:disabled {
-    background-color: var(--disabled-bg);
+    opacity: 0.5;
     cursor: not-allowed;
 }
 
 #events-log {
     grid-column: 1 / span 2;
     grid-row: 3;
-    background-color: var(--bg-tertiary);
-    height: 150px;
+    background: var(--bg2);
     overflow-y: auto;
-    padding: 10px;
-    border-radius: 5px;
-    border: 1px solid var(--border-color);
-    transition: background-color 0.3s ease, border-color 0.3s ease;
+    padding: 4px;
+    border: 1px solid var(--border);
+    font-size: 9px;
 }
 
 .event-entry {
-    margin-bottom: 5px;
-    padding: 5px;
-    border-left: 3px solid var(--accent-primary);
+    margin-bottom: 2px;
+    padding: 2px;
+    border-left: 2px solid var(--accent);
 }
 
 #notification-area {
     position: fixed;
-    top: 20px;
-    right: 20px;
-    width: 300px;
+    top: 4px;
+    right: 4px;
+    width: 200px;
+    font-size: 10px;
 }
 
 .notification {
-    background-color: var(--accent-primary);
-    color: var(--text-primary);
-    padding: 15px;
-    margin-bottom: 10px;
-    border-radius: 5px;
-    animation: fadeOut 5s forwards;
-    border: 1px solid var(--border-color);
+    background: var(--accent);
+    color: white;
+    padding: 4px;
+    margin-bottom: 4px;
+    border: 1px solid var(--border);
 }
 
 .notification.success {
-    background-color: #00ff88;
-    color: #000000;
+    background: var(--energy-ok);
+    color: #000;
 }
 
 .notification.warning {
-    background-color: #ff8800;
-    color: #000000;
+    background: var(--energy-warn);
+    color: #000;
 }
 
 .notification.error {
-    background-color: #ff4444;
-    color: #ffffff;
-}
-
-@keyframes fadeOut {
-    0% { opacity: 1; }
-    70% { opacity: 1; }
-    100% { opacity: 0; }
+    background: var(--energy-low);
+    color: #fff;
 }
 
 
 
-/* Added from js/game.js */
-@keyframes donationFloat {
-    0% { transform: scale(0.5); opacity: 0; }
-    10% { transform: scale(1.2); opacity: 1; }
-    20% { transform: scale(1); opacity: 1; }
-    80% { transform: translateY(-20px); opacity: 1; }
-    100% { transform: translateY(-40px); opacity: 0; }
-}
-
-.highlight {
-    animation: highlight 0.5s infinite alternate;
-}
-
-@keyframes highlight {
-    from { background-color: var(--accent-primary); }
-    to { background-color: #ff4747; }
-}
-
+/* Stream type display styles */
 .stream-gaming, .stream-chat, .stream-music, .stream-art, .stream-coding {
-    font-size: 24px;
+    font-size: 14px;
     text-align: center;
 }
 
@@ -478,484 +351,153 @@ button:disabled {
 }
 
 #shop-panel {
-    background-color: var(--bg-tertiary);
-    padding: 15px;
-    border-radius: 5px;
-    border: 1px solid var(--border-color);
+    background: var(--bg2);
+    padding: 4px;
+    border: 1px solid var(--border);
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
+    gap: 4px;
+    overflow-y: auto;
+    flex: 1;
 }
 
 #shop-panel h2 {
-    margin-bottom: 10px;
-    color: var(--accent-primary);
+    margin-bottom: 4px;
+    color: var(--accent);
+    font-size: 11px;
 }
 
 #shop-items-container {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 4px;
 }
 
 .shop-item {
-    border: 1px solid var(--border-color);
-    padding: 10px;
-    border-radius: 4px;
-    background-color: var(--bg-secondary);
-    transition: background-color 0.3s ease, border-color 0.3s ease;
+    border: 1px solid var(--border);
+    padding: 4px;
+    background: var(--bg);
+    font-size: 9px;
 }
 
 .shop-item p {
-    margin-bottom: 5px;
+    margin-bottom: 2px;
 }
 
 .shop-item button {
     width: 100%;
-    margin-top: 5px;
+    margin-top: 2px;
 }
 
 #chat-log {
-    width: 250px;
-    height: 100%;
-    background-color: var(--bg-primary);
-    border-left: 1px solid var(--border-color);
-    padding: 10px;
+    width: 140px;
+    background: var(--bg);
+    border-left: 1px solid var(--border);
+    padding: 4px;
     overflow-y: auto;
-    font-size: 14px;
+    font-size: 9px;
     display: flex;
     flex-direction: column;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .chat-message {
-    margin-bottom: 8px;
-    line-height: 1.4;
+    margin-bottom: 2px;
+    line-height: 1.2;
     word-wrap: break-word;
     overflow-wrap: break-word;
-    animation: slideIn 0.3s ease-out;
 }
 
 .chat-username {
-    margin-right: 5px;
-    text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
+    margin-right: 2px;
 }
 
-/* Responsive Design for smaller screens (e.g., portrait mode) */
-@media (max-width: 768px) {
-    #game-container {
-        grid-template-columns: 1fr; /* Single column layout */
-        grid-template-rows: auto auto auto auto auto; /* Adjust rows for stacking */
-        max-width: 100%;
-        padding: 5px;
-        gap: 10px; /* Reduced gap for mobile */
-    }
-
-    #stream-display {
-        grid-column: 1;
-        grid-row: 1;
-        flex-direction: column; /* Stack video over chat */
-        height: auto; /* Adjust height for stacked content */
-        min-height: 400px; /* Ensure minimum height */
-    }
-
-    #stream-video-feed {
-        height: 250px; /* Reduced for better mobile fit */
-        width: 100%;
-        font-size: 20px; /* Slightly smaller for mobile */
-    }
-
-    #chat-log {
-        width: 100%; /* Chat takes full width */
-        height: 150px; /* Reduced height for mobile */
-        border-left: none; /* No left border when full width */
-        border-top: 1px solid #303030; /* Add top border instead */
-        font-size: 12px; /* Smaller font for mobile */
-        padding: 8px;
-    }
-
-    .chat-message {
-        margin-bottom: 6px;
-        line-height: 1.3;
-    }
-
-    #sidebar {
-        grid-column: 1;
-        grid-row: 2; /* Sidebar below stream display */
-        gap: 10px;
-    }
-    
-    #stats-panel {
-        padding: 12px;
-        font-size: 16px;
-    }
-    
-    .stat-item {
-        font-size: 16px;
-        display: flex;
-        justify-content: space-between;
-    }    #controls-panel {
-        grid-column: 1;
-        grid-row: 3; /* Controls below sidebar */
-        padding: 12px;
-        gap: 12px;
-    }
-
-    #main-controls {
-        justify-content: space-around;
-    }
-
-    #stream-type-cards {
-        grid-template-columns: 1fr;
-        gap: 8px;
-    }
-
-    .stream-type-card {
-        padding: 10px;
-        min-height: 70px;
-        touch-action: manipulation;
-    }
-
-    .card-title {
-        font-size: 15px;
-    }
-
-    .card-emoji {
-        font-size: 20px;
-    }
-
-    .card-stats {
-        font-size: 11px;
-    }
-
-    #quick-switch-controls {
-        padding: 8px;
-    }
-
-    #quick-switch-buttons {
-        gap: 6px;
-    }
-
-    .quick-switch-btn {
-        padding: 8px 12px;
-        font-size: 11px;
-        min-width: 60px;
-    }
-
-    #events-log {
-        grid-column: 1;
-        grid-row: 4; /* Events log at the bottom */
-        height: 100px; /* Slightly reduce height for smaller screens */
-        font-size: 14px;
-    }
-
-    button {
-        padding: 14px 20px; /* Slightly larger buttons for touch */
-        font-size: 16px;
-        min-width: 120px;
-        touch-action: manipulation; /* Prevent zoom on double tap */
-    }
-
-    #notification-area {
-        width: calc(100% - 20px);
-        left: 10px;
-        right: 10px;
-        top: 10px;
-    }
-
-    .notification {
-        padding: 12px;
-        font-size: 14px;
-    }
-
-    #shop-panel {
-        padding: 12px;
-        max-height: 300px;
-        overflow-y: auto;
-    }
-
-    .shop-item {
-        padding: 8px;
-        font-size: 14px;
-    }
-
-    .shop-item h4 {
-        font-size: 16px;
-        margin-bottom: 5px;
-    }
-
-    .shop-item button {
-        padding: 10px;
-        min-width: 80px;
-    }
-
-    /* Improve stream overlay visibility on mobile */
-    #stream-overlay {
-        background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, transparent 100%);
-        padding: 8px;
-    }
-
-    #viewers-count, #stream-timer {
-        font-size: 14px;
-        font-weight: bold;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
-    }
+/* Simplified energy bar for 640x480 */
+.energy-bar {
+    width: 100%;
+    height: 6px;
+    background: var(--border);
+    margin-top: 2px;
+    overflow: hidden;
 }
 
-/* Additional mobile optimizations */
-@media (max-width: 480px) {
-    #game-container {
-        padding: 2px;
-        gap: 8px;
-        margin: 10px auto;
-    }
-    
-    #stream-display {
-        min-height: 350px;
-    }
-    
-    #stream-video-feed {
-        height: 200px;
-        font-size: 18px;
-    }
-    
-    #chat-log {
-        height: 120px;
-        padding: 6px;
-        font-size: 11px;
-    }
-    
-    #controls-panel {
-        padding: 10px;
-        gap: 10px;
-    }
-    
-    #main-controls {
-        gap: 8px;
-    }
-    
-    button {
-        padding: 12px 16px;
-        font-size: 14px;
-        min-width: 100px;
-    }
-    
-    .stream-type-card {
-        padding: 8px;
-        min-height: 60px;
-    }
-    
-    .card-title {
-        font-size: 14px;
-    }
-    
-    .card-emoji {
-        font-size: 18px;
-    }
-    
-    .card-stats {
-        font-size: 10px;
-    }
-    
-    #sidebar {
-        gap: 8px;
-    }
-    
-    #stats-panel {
-        padding: 10px;
-    }
-    
-    .stat-item {
-        font-size: 15px;
-    }
-    
-    #shop-panel {
-        padding: 10px;
-        max-height: 250px;
-    }
-    
-    .shop-item {
-        padding: 6px;
-    }
-    
-    #events-log {
-        height: 80px;
-        padding: 8px;
-        font-size: 12px;
-    }
+.energy-fill {
+    height: 100%;
+    background: var(--energy-ok);
 }
 
-/* Specific optimization for 720x1280 mobile devices */
-@media (max-width: 720px) and (max-height: 1280px) and (orientation: portrait) {
-    #game-container {
-        padding: 8px;
-        gap: 12px;
-        max-width: 100%;
-    }
-    
-    #stream-display {
-        min-height: 380px;
-        height: auto;
-    }
-    
-    #stream-video-feed {
-        height: 220px;
-        font-size: 18px;
-    }
-    
-    #chat-log {
-        height: 140px;
-        font-size: 13px;
-        padding: 10px;
-    }
-    
-    #stats-panel {
-        padding: 16px;
-        font-size: 16px;
-    }
-    
-    .stat-item {
-        font-size: 16px;
-        padding: 4px 0;
-    }
-    
-    /* Optimize theme toggle for mobile */
-    .theme-toggle-btn {
-        width: 40px;
-        height: 40px;
-        font-size: 18px;
-        top: 8px;
-        right: 8px;
-    }
-    
-    /* Enhanced energy bar for mobile */
-    .energy-bar {
-        height: 10px;
-        margin-top: 8px;
-    }
-    
-    button {
-        padding: 16px 24px;
-        font-size: 16px;
-        min-height: 48px; /* Ensure touch targets are at least 48px */
-        touch-action: manipulation;
-    }
-    
-    .stream-type-card {
-        min-height: 80px;
-        padding: 16px;
-        font-size: 14px;
-    }
-    
-    .quick-switch-btn {
-        padding: 12px 16px;
-        font-size: 14px;
-        min-height: 44px;
-    }
-    
-    #events-log {
-        height: 100px;
-        font-size: 13px;
-        padding: 12px;
-    }
-    
-    .notification {
-        font-size: 15px;
-        padding: 16px;
-        margin-bottom: 12px;
-    }
-    
-    /* Optimize notification area for mobile */
-    #notification-area {
-        top: 10px;
-        right: 10px;
-        left: 10px;
-        width: auto;
-    }
-    
-    /* Better spacing for portrait mobile */
-    #main-controls {
-        gap: 12px;
-        flex-direction: column;
-    }
-    
-    #main-controls button {
-        width: 100%;
-        max-width: 300px;
-        margin: 0 auto;
-    }
+.energy-fill.medium {
+    background: var(--energy-warn);
 }
 
-/* Touch-specific improvements */
-@media (hover: none) and (pointer: coarse) {
-    .stream-type-card {
-        min-height: 70px;
-        touch-action: manipulation;
-    }
-    
-    .stream-type-card:active {
-        transform: scale(0.98);
-        background-color: var(--chat-hover);
-    }
-    
-    button:active {
-        transform: scale(0.98);
-    }
-    
-    .quick-switch-btn:active {
-        transform: scale(0.95);
-    }
+.energy-fill.low {
+    background: var(--energy-low);
 }
 
-/* Swipe gesture hint for mobile */
-.swipe-hint {
-    position: absolute;
-    bottom: 5px;
-    right: 5px;
-    font-size: 10px;
-    color: var(--text-muted);
-    opacity: 0.7;
+/* Remove unnecessary styles */
+.offline-message {
+    font-size: 14px;
+    color: var(--text2);
+    text-align: center;
 }
 
-/* Chat enhancements */
-.chat-message {
-    animation: slideIn 0.3s ease-out;
+.timestamp {
+    color: var(--accent);
+    font-weight: bold;
+    margin-right: 2px;
 }
 
-@keyframes slideIn {
-    from {
-        opacity: 0;
-        transform: translateX(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
+/* Keep only essential tutorial styles */
+.tutorial-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
 }
 
-.chat-username {
-    text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
+.tutorial-content {
+    background: var(--bg);
+    padding: 20px;
+    max-width: 400px;
+    max-height: 350px;
+    overflow-y: auto;
+    text-align: center;
+    border: 1px solid var(--border);
+    font-size: 12px;
 }
 
-/* Emote styling */
+.tutorial-content h2 {
+    color: var(--accent);
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+.tutorial-content p {
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+/* Simplified chat elements */
 .chat-emote {
     display: inline-block;
-    width: 20px;
-    height: 20px;
+    width: 12px;
+    height: 12px;
     vertical-align: middle;
-    margin: 0 2px;
+    margin: 0 1px;
 }
 
-/* Subscriber badge */
 .subscriber-badge {
     display: inline-block;
-    background-color: var(--accent-primary);
-    color: var(--text-primary);
-    font-size: 10px;
-    padding: 1px 4px;
-    border-radius: 3px;
-    margin-right: 4px;
+    background: var(--accent);
+    color: white;
+    font-size: 8px;
+    padding: 1px 2px;
+    margin-right: 2px;
     vertical-align: middle;
 }
 
@@ -994,57 +536,4 @@ button:disabled {
     line-height: 1.6;
 }
 
-/* Energy bar visualization */
-.energy-bar {
-    width: 100%;
-    height: 8px;
-    background-color: var(--border-color);
-    border-radius: 4px;
-    margin-top: 5px;
-    overflow: hidden;
-}
-
-.energy-fill {
-    height: 100%;
-    background: var(--energy-gradient);
-    border-radius: 4px;
-    transition: width 0.3s ease, background-color 0.3s ease;
-}
-
-.energy-fill.medium {
-    background: var(--energy-medium);
-}
-
-.energy-fill.low {
-    background: var(--energy-low);
-}
-
-/* Pulse animation for important actions */
-@keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba(145, 71, 255, 0.7); }
-    70% { box-shadow: 0 0 0 10px rgba(145, 71, 255, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(145, 71, 255, 0); }
-}
-
-.pulse {
-    animation: pulse 1.5s infinite;
-}
-
-/* Accessibility improvements */
-@media (prefers-reduced-motion: reduce) {
-    .stream-type-card,
-    .quick-switch-btn,
-    .energy-fill {
-        transition: none;
-    }
-    
-    .stream-type-card:not(.disabled):hover {
-        transform: none;
-    }
-    
-    .cardLoading,
-    .pulse,
-    .highlight {
-        animation: none !important;
-    }
-}
+/* Clean minimal styles only */

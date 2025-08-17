@@ -1,5 +1,9 @@
-class Stream {
-    constructor() {
+import { CONFIG } from '../config/config.js';
+
+export class Stream {
+    constructor(game, ui) {
+        this.game = game;
+        this.ui = ui;
         this.active = false;
         this.startTime = null;
         this.endTime = null;
@@ -23,13 +27,13 @@ class Stream {
         if (!streamTypeConfig) return false;
         
         // Check if player can afford and has energy
-        if (!GAME.player.spendMoney(streamTypeConfig.cost)) {
-            UI.showNotification("Not enough money to start this stream!");
+        if (!this.game.player.spendMoney(streamTypeConfig.cost)) {
+            this.ui.showNotification("Not enough money to start this stream!");
             return false;
         }
         
-        if (GAME.player.energy < streamTypeConfig.energyCost) {
-            UI.showNotification("Not enough energy to start streaming!");
+        if (this.game.player.energy < streamTypeConfig.energyCost) {
+            this.ui.showNotification("Not enough energy to start streaming!");
             return false;
         }
           // Set stream properties
@@ -48,13 +52,13 @@ class Stream {
         this.calculateEnergyDrainRate(streamTypeConfig);
         
         // Use energy
-        GAME.player.useEnergy(streamTypeConfig.energyCost);
+        this.game.player.useEnergy(streamTypeConfig.energyCost);
         
         // Start UI updates
         this.startTimers();
-        UI.updateStreamDisplay(this.type);
-        UI.logEvent(`Started a ${streamTypeConfig.name} stream!`);
-        CHAT_MANAGER.startChatting(this.type); // Start chat simulation
+        this.ui.updateStreamDisplay(this.type);
+        this.ui.logEvent(`Started a ${streamTypeConfig.name} stream!`);
+        this.game.chatManager.startChatting(this.type); // Start chat simulation
         
         return true;
     }
@@ -66,54 +70,54 @@ class Stream {
         this.endTime = new Date();
         this.duration = (this.endTime - this.startTime) / 1000; // in seconds
         
-        CHAT_MANAGER.stopChatting(); // Stop chat simulation
+        this.game.chatManager.stopChatting(); // Stop chat simulation
         this.clearTimers();
         
         // Calculate rewards
         const rewards = this.calculateRewards();
         
         // Apply rewards
-        GAME.player.addMoney(rewards.money);
-        GAME.player.addSubscribers(rewards.subscribers);
-        GAME.player.changeReputation(rewards.reputation);
+        this.game.player.addMoney(rewards.money);
+        this.game.player.addSubscribers(rewards.subscribers);
+        this.game.player.changeReputation(rewards.reputation);
         
         // Check for subscriber churn due to bad stream performance
         const durationFactor = Math.min(this.duration / this.targetDuration, 1.0); // Already calculated in calculateRewards, but recalculate for clarity here or pass from there
-        const endedDueToExhaustion = GAME.player.energy <= 0;
+        const endedDueToExhaustion = this.game.player.energy <= 0;
 
-        if ((durationFactor < CONFIG.BAD_STREAM_CHURN_THRESHOLD || endedDueToExhaustion) && GAME.player.subscribers >= CONFIG.MIN_SUBSCRIBERS_FOR_CHURN) {
+        if ((durationFactor < CONFIG.BAD_STREAM_CHURN_THRESHOLD || endedDueToExhaustion) && this.game.player.subscribers >= CONFIG.MIN_SUBSCRIBERS_FOR_CHURN) {
             let churnPercent = CONFIG.BAD_STREAM_CHURN_BASE_PERCENT;
-            const reputationMitigation = GAME.player.reputation * CONFIG.CHURN_REPUTATION_MITIGATION_FACTOR;
+            const reputationMitigation = this.game.player.reputation * CONFIG.CHURN_REPUTATION_MITIGATION_FACTOR;
             churnPercent = Math.max(0, churnPercent - reputationMitigation);
             churnPercent = Math.min(churnPercent, CONFIG.MAX_CHURN_PERCENT_CAP);
 
             if (churnPercent > 0) {
-                const subsToLose = Math.floor(GAME.player.subscribers * churnPercent);
+                const subsToLose = Math.floor(this.game.player.subscribers * churnPercent);
                 if (subsToLose > 0) {
-                    GAME.player.removeSubscribers(subsToLose);
+                    this.game.player.removeSubscribers(subsToLose);
                     let churnReason = "Stream performance was poor.";
                     if (endedDueToExhaustion) churnReason = "Stream ended due to exhaustion.";
                     else if (durationFactor < CONFIG.BAD_STREAM_CHURN_THRESHOLD) churnReason = "Stream was too short.";
-                    UI.logEvent(`Lost ${subsToLose} subscribers. Reason: ${churnReason}`);
-                    UI.showNotification(`Oh no! Lost ${subsToLose} subscribers due to a bad stream!`);
+                    this.ui.logEvent(`Lost ${subsToLose} subscribers. Reason: ${churnReason}`);
+                    this.ui.showNotification(`Oh no! Lost ${subsToLose} subscribers due to a bad stream!`);
                 }
             }
         }
         
         // Update stats
-        GAME.player.stats.totalStreamTime += this.duration;
-        GAME.player.stats.streamsCompleted++;
-        GAME.player.stats.maxViewers = Math.max(GAME.player.stats.maxViewers, this.currentViewers);
+        this.game.player.stats.totalStreamTime += this.duration;
+        this.game.player.stats.streamsCompleted++;
+        this.game.player.stats.maxViewers = Math.max(this.game.player.stats.maxViewers, this.currentViewers);
         
         // Log results
-        UI.logEvent(`Stream ended after ${Math.floor(this.duration)} seconds. Gained $${rewards.money} and ${rewards.subscribers} new subscribers!`);
+        this.ui.logEvent(`Stream ended after ${Math.floor(this.duration)} seconds. Gained $${rewards.money} and ${rewards.subscribers} new subscribers!`);
         
         // Check if player has met win conditions
-        if (GAME.player.hasWon()) {
-            GAME.victory();
+        if (this.game.player.hasWon()) {
+            this.game.victory();
         }
         
-        UI.updateStreamDisplay();
+        this.ui.updateStreamDisplay();
         return true;
     }
     
@@ -122,26 +126,26 @@ class Stream {
         let viewers = streamTypeConfig.baseViewers;
         
         // Factor in subscribers (some percentage will watch)
-        viewers += Math.floor(GAME.player.subscribers * 0.15);
+        viewers += Math.floor(this.game.player.subscribers * 0.15);
         
         // Factor in reputation
-        viewers *= (0.5 + (GAME.player.reputation / 100) * 1.5);
+        viewers *= (0.5 + (this.game.player.reputation / 100) * 1.5);
         
         // Factor in relevant skill
         let relevantSkill = 1;
         switch(this.type) {
             case "gaming": 
-                relevantSkill = GAME.player.getSkillLevel("gaming"); 
+                relevantSkill = this.game.player.getSkillLevel("gaming"); 
                 break;
             case "justchatting":
             case "music": 
-                relevantSkill = GAME.player.getSkillLevel("talking"); 
+                relevantSkill = this.game.player.getSkillLevel("talking"); 
                 break;
             case "artstream": 
-                relevantSkill = GAME.player.getSkillLevel("creativity"); 
+                relevantSkill = this.game.player.getSkillLevel("creativity"); 
                 break;
             case "coding": 
-                relevantSkill = GAME.player.getSkillLevel("technical"); 
+                relevantSkill = this.game.player.getSkillLevel("technical"); 
                 break;
         }
         
@@ -161,7 +165,7 @@ class Stream {
         drainRate *= (1.2 - (relevantSkillLevel * 0.1)); // Up to 50% reduction at skill 5
         
         // Reputation makes streaming less tiring
-        drainRate *= (1 - (GAME.player.reputation / 200)); // Up to 50% reduction at 100 rep
+        drainRate *= (1 - (this.game.player.reputation / 200)); // Up to 50% reduction at 100 rep
         
         this.energyDrainRate = Math.max(0.1, drainRate); // Minimum drain rate
     }
@@ -174,7 +178,7 @@ class Stream {
             "artstream": "creativity",
             "coding": "technical"
         };
-        return GAME.player.getSkillLevel(skillMap[this.type] || "talking");
+        return this.game.player.getSkillLevel(skillMap[this.type] || "talking");
     }
     
     calculateRewards() {
@@ -195,14 +199,14 @@ class Stream {
             : 0;
         
         // Money calculation with viewer average
-        const baseMoneyPerMinute = GAME.player.subscribers * CONFIG.SUBSCRIBER_VALUE;
+        const baseMoneyPerMinute = this.game.player.subscribers * CONFIG.SUBSCRIBER_VALUE;
         const viewerBonus = avgViewers * 0.1; // Extra money from viewers
         rewards.money = Math.floor((baseMoneyPerMinute + viewerBonus) * (actualDuration / 60) * durationFactor);
         
         // Subscriber calculation with better formula
         if (avgViewers > 0) {
             const baseNewSubs = (avgViewers / 30); // 1 sub per 30 average viewers
-            const reputationMultiplier = 0.5 + (GAME.player.reputation / 100); // 0.5x to 1.5x
+            const reputationMultiplier = 0.5 + (this.game.player.reputation / 100); // 0.5x to 1.5x
             const peakViewerBonus = (this.peakViewers / 100) * 0.5; // Bonus for high peak
             
             rewards.subscribers = Math.floor(
@@ -235,7 +239,7 @@ class Stream {
         
         // Calculate viewer retention
         const baseRetention = CONFIG.VIEWER_RETENTION_BASE;
-        const repBonus = GAME.player.reputation * CONFIG.VIEWER_RETENTION_REPUTATION_BONUS;
+        const repBonus = this.game.player.reputation * CONFIG.VIEWER_RETENTION_REPUTATION_BONUS;
         const skillBonus = this.getRelevantSkillLevel() * 0.05;
         
         this.viewerRetention = Math.min(0.95, baseRetention + repBonus + skillBonus);
@@ -251,8 +255,8 @@ class Stream {
         }
         
         // Chance for new viewers based on chat momentum
-        if (CHAT_MANAGER.momentum > 5) {
-            const growthChance = CONFIG.VIEWER_GROWTH_MOMENTUM * (CHAT_MANAGER.momentum / 10);
+        if (this.game.chatManager.momentum > 5) {
+            const growthChance = CONFIG.VIEWER_GROWTH_MOMENTUM * (this.game.chatManager.momentum / 10);
             if (Math.random() < growthChance) {
                 newViewerCount += Math.floor(Math.random() * 3) + 1;
             }
@@ -270,7 +274,7 @@ class Stream {
         this.checkForDonations();
         
         // Update UI
-        UI.updateViewerCount(this.currentViewers);
+        this.ui.updateViewerCount(this.currentViewers);
     }
     
     checkForDonations() {
@@ -284,10 +288,10 @@ class Stream {
                 CONFIG.AVERAGE_DONATION_AMOUNT[0]
             );
             
-            GAME.player.addMoney(donationAmount);
-            GAME.player.stats.totalDonations += donationAmount;
+            this.game.player.addMoney(donationAmount);
+            this.game.player.stats.totalDonations += donationAmount;
             
-            UI.showDonation(donationAmount);
+            this.ui.showDonation(donationAmount);
         }
     }
     
@@ -298,7 +302,7 @@ class Stream {
             const elapsed = Math.floor((new Date() - this.startTime) / 1000);
             
             // Update UI
-            UI.updateStreamTimer(elapsed);
+            this.ui.updateStreamTimer(elapsed);
             
             // Update viewers
             this.updateViewers();
@@ -308,20 +312,20 @@ class Stream {
 
             // Check for new live subscribers
             if (this.currentViewers > 0 && Math.random() < (this.currentViewers * CONFIG.LIVE_SUBSCRIBER_RATE)) {
-                GAME.player.addSubscribers(1);
+                this.game.player.addSubscribers(1);
                 // Consider a subtle UI notification here in the future if desired
             }
             
             // Check if we've reached target duration
             if (elapsed >= this.targetDuration) {
-                UI.highlightEndStream();
+                this.ui.highlightEndStream();
             }
             
             // Dynamic energy usage based on calculated drain rate
-            GAME.player.useEnergy(this.energyDrainRate);
-            if (GAME.player.energy <= 0) {
-                UI.logEvent("You're exhausted! Stream ended abruptly.");
-                CHAT_MANAGER.stopChatting(); // Stop chat if stream ends due to exhaustion
+            this.game.player.useEnergy(this.energyDrainRate);
+            if (this.game.player.energy <= 0) {
+                this.ui.logEvent("You're exhausted! Stream ended abruptly.");
+                this.game.chatManager.stopChatting(); // Stop chat if stream ends due to exhaustion
                 this.end();
             }
         }, 1000);
@@ -337,8 +341,8 @@ class Stream {
     
     checkForRandomEvent() {
         if (Math.random() < CONFIG.EVENT_CHANCE_PER_SECOND) {
-            const event = EventManager.getRandomEvent(this.type);
-            EventManager.triggerEvent(event);
+            const event = this.game.eventManager.getRandomEvent(this.type);
+            this.game.eventManager.triggerEvent(event);
         }
     }
     
@@ -355,7 +359,7 @@ class Stream {
         this.calculateEnergyDrainRate(streamTypeConfig);
         
         // Log the switch
-        UI.logEvent(`Switched from ${oldType} to ${newStreamType} stream!`);
+        this.ui.logEvent(`Switched from ${oldType} to ${newStreamType} stream!`);
         
         return true;
     }
