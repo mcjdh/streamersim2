@@ -10,7 +10,7 @@
     <div id="game-container">
         <div id="stream-display">
             <div id="stream-video-feed"></div>
-            <div id="chat-log">
+            <div id="chat-log" aria-live="polite" aria-label="Chat messages">
                 <!-- Chat messages will appear here -->
             </div>
             <div id="stream-overlay">
@@ -47,11 +47,27 @@
                 </div>
             </div>
         </div>
-        <div id="events-log"></div>
-        <div id="notification-area"></div>
+        <div id="events-log" aria-live="polite" aria-label="Game events"></div>
+        <div id="notification-area" aria-live="assertive" aria-label="Notifications"></div>
     </div>
 
     <!-- ES Module entry point -->
     <script type="module" src="js/main.js"></script>
+    
+    <!-- Fallback for users with JavaScript disabled -->
+    <noscript>
+        <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f0f0f0; z-index: 9999; display: flex; align-items: center; justify-content: center; font-family: Arial, sans-serif;">
+            <div style="text-align: center; max-width: 500px; padding: 20px;">
+                <h1>JavaScript Required</h1>
+                <p>Streamer Simulator 2 requires JavaScript to run. Please enable JavaScript in your browser settings and refresh the page to play.</p>
+                <p><strong>How to enable JavaScript:</strong></p>
+                <ul style="text-align: left; margin: 0 auto; display: inline-block;">
+                    <li><strong>Chrome:</strong> Settings → Privacy and security → Site Settings → JavaScript → Allowed</li>
+                    <li><strong>Firefox:</strong> Type "about:config" in address bar → search "javascript.enabled" → set to true</li>
+                    <li><strong>Safari:</strong> Preferences → Security → Enable JavaScript</li>
+                </ul>
+            </div>
+        </div>
+    </noscript>
 </body>
 </html>

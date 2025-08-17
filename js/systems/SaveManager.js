@@ -27,7 +27,7 @@ export class SaveManager {
                 id: type.id,
                 unlocked: type.unlocked
             })),
-            selectedStreamType: this.game.ui.selectedStreamType,
+            selectedStreamType: this.game.ui.streamTypeSelector.selectedStreamType,
             timestamp: Date.now(),
             version: '2.0' // For future compatibility
         };
@@ -37,12 +37,12 @@ export class SaveManager {
      * Deserialize and restore game state
      */
     deserializeGameState(gameState) {
-        // Restore player state with fallbacks
-        this.game.player.subscribers = gameState.player.subscribers || 0;
-        this.game.player.money = gameState.player.money || CONFIG.STARTING_MONEY;
-        this.game.player.reputation = gameState.player.reputation || CONFIG.STARTING_REPUTATION;
-        this.game.player.energy = gameState.player.energy || CONFIG.STARTING_ENERGY;
-        this.game.player.maxEnergy = gameState.player.maxEnergy || CONFIG.STARTING_ENERGY;
+        // Restore player state with fallbacks (using nullish coalescing to preserve valid 0 values)
+        this.game.player.subscribers = gameState.player.subscribers ?? 0;
+        this.game.player.money = gameState.player.money ?? CONFIG.STARTING_MONEY;
+        this.game.player.reputation = gameState.player.reputation ?? CONFIG.STARTING_REPUTATION;
+        this.game.player.energy = gameState.player.energy ?? CONFIG.STARTING_ENERGY;
+        this.game.player.maxEnergy = gameState.player.maxEnergy ?? CONFIG.STARTING_ENERGY;
         this.game.player.purchasedItems = gameState.player.purchasedItems || [];
         this.game.player.stats = gameState.player.stats || {
             totalStreamTime: 0,
@@ -69,8 +69,19 @@ export class SaveManager {
             });
         }
 
-        // Restore UI state
-        this.game.ui.selectedStreamType = gameState.selectedStreamType || 'gaming';
+        // Restore UI state with safe fallback
+        const savedStreamType = gameState.selectedStreamType;
+        if (savedStreamType) {
+            // Check if the saved stream type exists and is unlocked
+            const streamType = CONFIG.STREAM_TYPES.find(t => t.id === savedStreamType);
+            if (streamType && streamType.unlocked) {
+                this.game.ui.streamTypeSelector.selectedStreamType = savedStreamType;
+            } else {
+                // Fallback to first unlocked stream type
+                const firstUnlocked = CONFIG.STREAM_TYPES.find(t => t.unlocked);
+                this.game.ui.streamTypeSelector.selectedStreamType = firstUnlocked ? firstUnlocked.id : 'gaming';
+            }
+        }
     }
 
     /**
@@ -82,11 +93,11 @@ export class SaveManager {
             gameState.isManualSave = true;
             
             localStorage.setItem(this.saveKey, JSON.stringify(gameState));
-            this.game.ui.showNotification('Game saved!', 'success');
+            this.game.ui.notifications.show('Game saved!', 'success');
             return true;
         } catch (error) {
             console.error('Save failed:', error);
-            this.game.ui.showNotification('Save failed!', 'error');
+            this.game.ui.notifications.show('Save failed!', 'error');
             return false;
         }
     }
@@ -98,7 +109,7 @@ export class SaveManager {
         try {
             const saveData = localStorage.getItem(this.saveKey);
             if (!saveData) {
-                this.game.ui.showNotification('No save file found!', 'warning');
+                this.game.ui.notifications.show('No save file found!', 'warning');
                 return false;
             }
 
@@ -112,17 +123,21 @@ export class SaveManager {
             this.deserializeGameState(gameState);
 
             // Update UI to reflect loaded state
-            this.game.ui.updateStats();
-            this.game.ui.createStreamTypeCards();
-            this.game.ui.createShopItems();
+            this.game.ui.statsPanel.updateStats();
+            this.game.ui.streamTypeSelector.createStreamTypeCards();
+            this.game.ui.shopView.createShopItems();
+            
+            // Normalize UI controls to non-streaming state
+            this.game.ui.toggleStreamControls(false);
+            this.game.ui.streamTypeSelector.updateQuickSwitchControls();
 
             const saveAge = Math.floor((Date.now() - gameState.timestamp) / 1000 / 60);
             const saveType = gameState.isManualSave ? 'Manual' : 'Auto';
-            this.game.ui.showNotification(`${saveType} save loaded! (${saveAge}m ago)`, 'success');
+            this.game.ui.notifications.show(`${saveType} save loaded! (${saveAge}m ago)`, 'success');
             return true;
         } catch (error) {
             console.error('Load failed:', error);
-            this.game.ui.showNotification('Load failed! Save may be corrupted.', 'error');
+            this.game.ui.notifications.show('Load failed! Save may be corrupted.', 'error');
             return false;
         }
     }
@@ -203,11 +218,11 @@ export class SaveManager {
     deleteSave() {
         try {
             localStorage.removeItem(this.saveKey);
-            this.game.ui.showNotification('Save deleted!', 'warning');
+            this.game.ui.notifications.show('Save deleted!', 'warning');
             return true;
         } catch (error) {
             console.error('Failed to delete save:', error);
-            this.game.ui.showNotification('Failed to delete save!', 'error');
+            this.game.ui.notifications.show('Failed to delete save!', 'error');
             return false;
         }
     }

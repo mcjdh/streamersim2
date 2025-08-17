@@ -35,7 +35,8 @@ export class StatsPanel {
             this.elements.reputation.textContent = player.reputation;
         }
         if (this.elements.energy) {
-            this.elements.energy.textContent = Math.floor(player.energy);
+            const energyPercent = Math.floor((player.energy / player.maxEnergy) * 100);
+            this.elements.energy.textContent = energyPercent;
         }
 
         // Update energy bar

@@ -315,12 +315,14 @@ export class ModularUI {
 
         const userSpan = document.createElement('span');
         userSpan.className = 'chat-username';
+        // Use innerHTML to properly render HTML elements like subscriber badges
         userSpan.innerHTML = `${username}: `;
         userSpan.style.color = userColor;
         userSpan.style.fontWeight = 'bold';
 
         const textSpan = document.createElement('span');
         textSpan.className = 'chat-text';
+        // Use innerHTML to properly render HTML elements like emotes
         textSpan.innerHTML = messageText;
 
         const scrollThreshold = 20;
