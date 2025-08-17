@@ -2,6 +2,9 @@ export class EventManager {
     constructor(game, ui) {
         this.game = game;
         this.ui = ui;
+    // Ensure instance access to events even though it's declared as a static field
+    // This prevents `this.events` from being undefined in instance methods.
+    this.events = this.constructor.events;
     }
     
     static events = [

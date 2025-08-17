@@ -1,4 +1,15 @@
 import { CONFIG } from '../config/config.js';
+import {
+    USERNAME_PARTS,
+    GENERIC_MESSAGES,
+    STREAM_TYPE_MESSAGES,
+    CONTEXTUAL_MESSAGES,
+    SUB_MESSAGES,
+    DONATION_REACTIONS,
+    EVENT_REACTIONS,
+    CHAT_EMOTES,
+    USER_COLORS
+} from '../data/chatData.js';
 
 export class ChatManager {
     constructor(game, ui) {
@@ -7,71 +18,7 @@ export class ChatManager {
         this.chatTimer = null;
         this.momentum = 0; // Chat activity momentum
         this.lastMessageTime = Date.now();
-        this.namePrefixes = ["Epic", "Pro", "Mega", "Stream", "Chat", "The", "Sir", "Lady", "Dr", "Captain"];
-        this.nameMiddles = ["Gam", "Play", "View", "Lov", "Cod", "Art", "Song", "Talk", "Blitz", "Flow"];
-        this.nameSuffixes = ["er", "Fan", "Star", "Dude", "Girl", "Bot", "King", "Queen", "Pro", "X", "TV", "Live"];
-        this.nameNumbers = ["1", "7", "22", "007", "42", "101", "Max", "Pro", "HD"];
-        this.genericMessages = [
-            "Hello everyone!",
-            "Great stream!",
-            "Pog",
-            "Kappa",
-            "LUL",
-            "Nice!",
-            "Keep it up!",
-            "Love this content.",
-            "Hi chat!",
-            "What's up?",
-            "Sub hype!",
-            "Let's gooo!",
-            "This is fun!"
-        ];
-        this.streamTypeMessages = {
-            gaming: ["GG!", "What game is this?", "Nice play!", "Heals?", "Clip it!", "Wombo combo!", "Get rekt!"],
-            justchatting: ["How is everyone?", "True!", "Tell us more!", "lol", "Interesting point.", "I agree.", "Really?"],
-            music: ["Love this song!", "Tune!", "What's the track ID?", "Vibing", "Turn it up!", "Drop the bass!"],
-            artstream: ["So creative!", "Amazing art!", "What brushes are you using?", "Love the colors.", "Talented!"],
-            coding: ["Nice code!", "What language is that?", "Have you tried X library?", "Syntax error on line 42? Just kidding!", "Clean solution!", "Rubber duck debugging FTW!"]
-        };
-        this.userColors = ["#FF69B4", "#00FFFF", "#7FFF00", "#FFD700", "#FF4500", "#DA70D6", "#FF7F50", "#ADFF2F"]; // Some bright colors
-        
-        // Emotes
-        this.emotes = {
-            "Pog": "😮",
-            "PogChamp": "😲",
-            "Kappa": "😏",
-            "LUL": "😂",
-            "BibleThump": "😭",
-            "Kreygasm": "😩",
-            "4Head": "😄",
-            "CoolCat": "😎",
-            "NotLikeThis": "🤦",
-            "FeelsGoodMan": "😌",
-            "FeelsBadMan": "😢",
-            "monkaS": "😰",
-            "EZ": "😎",
-            "GG": "🎮",
-            "Heart": "❤️",
-            "Fire": "🔥"
-        };
-        
-        // Enhanced message templates with placeholders
-        this.contextualMessages = {
-            lowViewers: ["Where is everyone?", "Quiet stream today", "Cozy vibes", "Small stream, big heart"],
-            highViewers: ["Chat is popping off!", "So many people!", "This is crazy!", "Front page?!"],
-            longStream: ["Marathon stream!", "How long have we been live?", "Dedication!", "Still going strong!"],
-            newSubs: ["Welcome new subs!", "Sub hype!", "Growing fast!", "Love to see it!"],
-            lowEnergy: ["Streamer looks tired", "Maybe time for a break?", "Energy check", "Stay hydrated!"]
-        };
-        
-        // Subscriber messages
-        this.subMessages = [
-            "Subbed for {months} months!",
-            "Love the content!",
-            "Best streamer!",
-            "Take my sub!",
-            "Supporting the dream!"
-        ];
+        // Data is now imported from chatData.js for easy tuning
     }
 
     getRandomElement(arr) {
@@ -83,16 +30,16 @@ export class ChatManager {
         const structureType = Math.random();
 
         if (structureType < 0.4) { // Prefix + Suffix
-            username = this.getRandomElement(this.namePrefixes) + this.getRandomElement(this.nameSuffixes);
+            username = this.getRandomElement(USERNAME_PARTS.prefixes) + this.getRandomElement(USERNAME_PARTS.suffixes);
         } else if (structureType < 0.7) { // Middle + Suffix
-            username = this.getRandomElement(this.nameMiddles) + this.getRandomElement(this.nameSuffixes);
+            username = this.getRandomElement(USERNAME_PARTS.middles) + this.getRandomElement(USERNAME_PARTS.suffixes);
         } else { // Prefix + Middle + Suffix
-            username = this.getRandomElement(this.namePrefixes) + this.getRandomElement(this.nameMiddles) + this.getRandomElement(this.nameSuffixes);
+            username = this.getRandomElement(USERNAME_PARTS.prefixes) + this.getRandomElement(USERNAME_PARTS.middles) + this.getRandomElement(USERNAME_PARTS.suffixes);
         }
 
         // Optionally add numbers
         if (Math.random() < 0.3) {
-            username += this.getRandomElement(this.nameNumbers);
+            username += this.getRandomElement(USERNAME_PARTS.numbers);
         }
         
         // Simple Ghetto Capitalization: Capitalize first letter, could be improved
@@ -106,7 +53,7 @@ export class ChatManager {
 
     generateChatMessage(streamType, customUsername = null, customMessage = null) {
         const username = customUsername || this.generateRandomUsername();
-        const userColor = this.getRandomElement(this.userColors);
+        const userColor = this.getRandomElement(USER_COLORS);
         const isSub = Math.random() < (Math.min(this.game.player.subscribers, 100) / 200); // Up to 50% chance at 100 subs
         
         let messageText = customMessage;
@@ -115,10 +62,10 @@ export class ChatManager {
             // Check for contextual messages
             if (Math.random() < 0.3) {
                 messageText = this.getContextualMessage();
-            } else if (Math.random() < 0.6 || !this.streamTypeMessages[streamType]) {
-                messageText = this.getRandomElement(this.genericMessages);
+            } else if (Math.random() < 0.6 || !STREAM_TYPE_MESSAGES[streamType]) {
+                messageText = this.getRandomElement(GENERIC_MESSAGES);
             } else {
-                messageText = this.getRandomElement(this.streamTypeMessages[streamType]);
+                messageText = this.getRandomElement(STREAM_TYPE_MESSAGES[streamType]);
             }
             
             // Add emotes to messages
@@ -140,28 +87,28 @@ export class ChatManager {
         const streamTime = this.game.currentStream.active ? (Date.now() - this.game.currentStream.startTime) / 1000 : 0;
         
         if (viewers < 5) {
-            return this.getRandomElement(this.contextualMessages.lowViewers);
+            return this.getRandomElement(CONTEXTUAL_MESSAGES.lowViewers);
         } else if (viewers > 50) {
-            return this.getRandomElement(this.contextualMessages.highViewers);
+            return this.getRandomElement(CONTEXTUAL_MESSAGES.highViewers);
         } else if (streamTime > 120) {
-            return this.getRandomElement(this.contextualMessages.longStream);
+            return this.getRandomElement(CONTEXTUAL_MESSAGES.longStream);
         } else if (energy < 30) {
-            return this.getRandomElement(this.contextualMessages.lowEnergy);
+            return this.getRandomElement(CONTEXTUAL_MESSAGES.lowEnergy);
         }
         
-        return this.getRandomElement(this.genericMessages);
+        return this.getRandomElement(GENERIC_MESSAGES);
     }
     
     addEmotes(message) {
         // Randomly add emotes to messages
         if (Math.random() < 0.4) {
-            const emoteKeys = Object.keys(this.emotes);
+            const emoteKeys = Object.keys(CHAT_EMOTES);
             const randomEmote = this.getRandomElement(emoteKeys);
             message += ` ${randomEmote}`;
         }
         
         // Replace text emotes with emoji
-        Object.entries(this.emotes).forEach(([text, emoji]) => {
+        Object.entries(CHAT_EMOTES).forEach(([text, emoji]) => {
             message = message.replace(new RegExp(`\\b${text}\\b`, 'g'), 
                 `<span class="chat-emote" title="${text}">${emoji}</span>`);
         });
@@ -239,14 +186,12 @@ export class ChatManager {
     }
 
     postDonationReaction(donatorName, amount) {
-        const messages = [
-            `Wow, thanks ${donatorName} for the $${amount} donation! 🎉`,
-            `Poggers! $${amount} from ${donatorName}! Thank you! 🙏`,
-            `${donatorName} is a legend! Dropped $${amount}! 🔥`,
-            `Big love to ${donatorName} for the $${amount}!!! ❤️`
-        ];
+        const messageTemplate = this.getRandomElement(DONATION_REACTIONS);
+        const message = messageTemplate
+            .replace('{donator}', donatorName)
+            .replace('${amount}', amount);
         const reactionUser = this.generateRandomUsername(); // A random chatter reacts
-        this.generateChatMessage(this.game.currentStream.type, reactionUser, this.getRandomElement(messages));
+        this.generateChatMessage(this.game.currentStream.type, reactionUser, message);
         
         // Maybe a second, slightly delayed reaction
         if (Math.random() < 0.5) {
@@ -258,32 +203,11 @@ export class ChatManager {
     }
 
     postEventReaction(event) {
-        let reactionMessages = [];
-        switch(event.id) {
-            case "raid":
-                reactionMessages = ["RAID HYPE!", "Welcome raiders! 👋", "OMG a raid! Pog!", `Thanks for the raid, ${event.name}! Wait, that's the event name...`];
-                break;
-            case "technical_difficulties":
-                reactionMessages = ["Oh no, stream broke! 😭", "F in chat for the stream!", "RIP stream?", "Technical issues again? Classic."];
-                break;
-            case "big_donation": // This is already handled by postDonationReaction, but an event also fires
-                reactionMessages = ["Another big one! 💸", "The money keeps flowing!", "Chat is popping off!"];
-                break;
-            case "trolls":
-                reactionMessages = ["Not the trolls! 😠", "Ban hammer incoming?", "Ignore the trolls!", "Mods, do your thing!"];
-                if (this.game.player.reputation > 70) reactionMessages.push("Our community is strong! 💪");
-                break;
-            case "viral_moment":
-                reactionMessages = ["OMG WE WENT VIRAL! 🚀", "TO THE MOON! 🌕", "Clip it and ship it! Viral!", "This is insane! PogChamp"];
-                break;
-            case "gaming_win":
-                reactionMessages = ["EPIC WIN! GGWP!", "Clutch play! 🏆", "That was amazing!", "Winner winner chicken dinner!"];
-                break;
-            case "coding_breakthrough":
-                reactionMessages = ["Code master! 💻", "Big brain solution!", "Solved it! Genius!", "Finally, the bug is squashed! 🐞"];
-                break;
-            default:
-                reactionMessages = ["Something happened!", "What was that?", "Interesting..."];
+        let reactionMessages = EVENT_REACTIONS[event.id] || ["Something happened!", "What was that?", "Interesting..."];
+        
+        // Special case for trolls based on reputation
+        if (event.id === "trolls" && this.game.player.reputation > 70) {
+            reactionMessages = [...reactionMessages, "Our community is strong! 💪"];
         }
 
         if (reactionMessages.length > 0) {
@@ -294,7 +218,7 @@ export class ChatManager {
 
     postSubscriberMessage() {
         const months = Math.floor(Math.random() * 24) + 1;
-        const subMessage = this.getRandomElement(this.subMessages).replace('{months}', months);
+        const subMessage = this.getRandomElement(SUB_MESSAGES).replace('{months}', months);
         const subscriber = this.generateRandomUsername();
         
         this.generateChatMessage(this.game.currentStream.type, subscriber, subMessage);

@@ -1,4 +1,5 @@
 import { CONFIG } from '../config/config.js';
+import { SHOP_ITEMS } from '../data/shopItems.js';
 
 export class Player {
     constructor(callbacks = {}) {
@@ -156,7 +157,7 @@ export class Player {
     }
 
     buyItem(itemId) {
-        const item = CONFIG.SHOP_ITEMS.find(shopItem => shopItem.id === itemId);
+        const item = SHOP_ITEMS.find(shopItem => shopItem.id === itemId);
         if (!item) {
             console.error(`Item with id ${itemId} not found in shop.`);
             return false;

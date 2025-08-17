@@ -1,4 +1,5 @@
 import { CONFIG } from '../config/config.js';
+import { SHOP_ITEMS } from '../data/shopItems.js';
 
 export class ShopView {
     constructor(game, notifications) {
@@ -33,7 +34,7 @@ export class ShopView {
         
         this.shopContainer.innerHTML = ''; // Clear existing items
 
-        CONFIG.SHOP_ITEMS.forEach(item => {
+        SHOP_ITEMS.forEach(item => {
             const itemElement = this.createShopItem(item);
             this.shopContainer.appendChild(itemElement);
         });
@@ -128,7 +129,7 @@ export class ShopView {
      * Handle item purchase
      */
     buyItem(itemId) {
-        const item = CONFIG.SHOP_ITEMS.find(shopItem => shopItem.id === itemId);
+        const item = SHOP_ITEMS.find(shopItem => shopItem.id === itemId);
         if (!item) {
             console.error(`Item with id ${itemId} not found in shop.`);
             this.notifications.error('Item not found!');
@@ -210,9 +211,9 @@ export class ShopView {
      */
     getShopStats() {
         const player = this.game.player;
-        const totalItems = CONFIG.SHOP_ITEMS.length;
+        const totalItems = SHOP_ITEMS.length;
         const purchasedItems = player.purchasedItems?.length || 0;
-        const affordableItems = CONFIG.SHOP_ITEMS.filter(item => 
+        const affordableItems = SHOP_ITEMS.filter(item => 
             player.money >= item.cost
         ).length;
 
