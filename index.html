@@ -2,12 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=640, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Streamer Simulator 2 - Pi Edition</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div id="game-container">
+    <div id="game-wrapper">
+        <div id="game-container">
         <div id="stream-display">
             <div id="stream-video-feed"></div>
             <div id="chat-log" aria-live="polite" aria-label="Chat messages">
@@ -49,6 +50,7 @@
         </div>
         <div id="events-log" aria-live="polite" aria-label="Game events"></div>
         <div id="notification-area" aria-live="assertive" aria-label="Notifications"></div>
+        </div>
     </div>
 
     <!-- ES Module entry point -->

@@ -17,6 +17,7 @@ export class Stream {
         this.viewerRetention = CONFIG.VIEWER_RETENTION_BASE;
         this.peakViewers = 0;
         this.viewerHistory = [];
+        this.viewerHistoryWindow = 300; // cap history to last ~5 minutes at 1s ticks
         this.energyDrainRate = CONFIG.ENERGY_DEPLETION_BASE;
     }
     
@@ -244,15 +245,9 @@ export class Stream {
         
         this.viewerRetention = Math.min(0.95, baseRetention + repBonus + skillBonus);
         
-        // Apply retention
-        let newViewerCount = this.currentViewers;
-        
-        // Each viewer has a chance to leave
-        for (let i = 0; i < this.currentViewers; i++) {
-            if (Math.random() > this.viewerRetention) {
-                newViewerCount--;
-            }
-        }
+        // Apply retention using expectation (O(1))
+        const expectedStay = Math.round(this.currentViewers * this.viewerRetention);
+        let newViewerCount = expectedStay;
         
         // Chance for new viewers based on chat momentum
         if (this.game.chatManager.momentum > 5) {
@@ -268,6 +263,9 @@ export class Stream {
         
         this.currentViewers = newViewerCount;
         this.viewerHistory.push(this.currentViewers);
+        if (this.viewerHistory.length > this.viewerHistoryWindow) {
+            this.viewerHistory.shift();
+        }
         this.peakViewers = Math.max(this.peakViewers, this.currentViewers);
         
         // Check for donations

@@ -140,7 +140,7 @@ export class ChatManager {
 
     startChatting(streamType) {
         if (this.chatTimer) {
-            clearInterval(this.chatTimer);
+            clearTimeout(this.chatTimer);
         }
         
         // Reset momentum
@@ -148,39 +148,30 @@ export class ChatManager {
         
         // Initial burst of messages with slight staggering
         for (let i = 0; i < 3; i++) { 
-            setTimeout(() => this.generateChatMessage(streamType), (i * 500) + (Math.random() * 500)); // Staggered by 0.5s intervals + small random
+            setTimeout(() => this.generateChatMessage(streamType), (i * 500) + (Math.random() * 500));
         }
 
-        // Dynamic chat frequency based on viewers
-        const updateChatFrequency = () => {
-            if (this.chatTimer) {
-                clearInterval(this.chatTimer);
-            }
-            
+        // Adaptive scheduling using setTimeout
+        const loop = () => {
             const viewers = this.game.currentStream.currentViewers;
-            const baseFrequency = 3000; // 3 seconds
-            const minFrequency = 1000; // 1 second
-            
-            // More viewers = more frequent chat
-            const frequency = Math.max(minFrequency, baseFrequency - (viewers * 20));
-            
-            this.chatTimer = setInterval(() => {
-                // Multiple messages if high viewer count
-                const messageCount = viewers > 50 ? Math.floor(Math.random() * 3) + 1 : 1;
-                for (let i = 0; i < messageCount; i++) {
-                    setTimeout(() => this.generateChatMessage(streamType), i * 200);
-                }
-                
-                updateChatFrequency(); // Recursively update frequency
-            }, frequency);
+            const base = 3000; // 3 seconds
+            const min = 1000; // 1 second
+            const delay = Math.max(min, base - (viewers * 20));
+
+            const messageCount = viewers > 50 ? Math.floor(Math.random() * 3) + 1 : 1;
+            for (let i = 0; i < messageCount; i++) {
+                setTimeout(() => this.generateChatMessage(streamType), i * 200);
+            }
+
+            this.chatTimer = setTimeout(loop, delay);
         };
-        
-        updateChatFrequency();
+
+        loop();
     }
 
     stopChatting() {
         if (this.chatTimer) {
-            clearInterval(this.chatTimer);
+            clearTimeout(this.chatTimer);
             this.chatTimer = null;
         }
     }

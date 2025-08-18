@@ -9,9 +9,22 @@ import { SaveManager } from '../systems/SaveManager.js';
 export class Game {
     constructor() {
         this.ui = new ModularUI(this);
+        // Debounced stats updater to reduce redundant UI work
+        this._statsUpdateScheduled = false;
+        this._statsUpdateDelayMs = 100;
+        this._statsUpdateTimer = null;
+        this.scheduleStatsUpdate = () => {
+            if (this._statsUpdateScheduled) return;
+            this._statsUpdateScheduled = true;
+            this._statsUpdateTimer = setTimeout(() => {
+                this.ui.updateStats();
+                this._statsUpdateScheduled = false;
+                this._statsUpdateTimer = null;
+            }, this._statsUpdateDelayMs);
+        };
         // Create player with UI callbacks
         this.player = new Player({
-            updateStats: () => this.ui.updateStats(),
+            updateStats: () => this.scheduleStatsUpdate(),
             showNotification: (message) => this.ui.showNotification(message),
             logEvent: (message) => this.ui.logEvent(message)
         });

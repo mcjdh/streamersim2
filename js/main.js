@@ -21,6 +21,28 @@ window.addEventListener('DOMContentLoaded', () => {
         
         console.log('🎮 Streamer Simulator 2 - Pi Edition loaded successfully!');
         console.log('💡 Dev tip: Use GAME in console for debugging');
+
+        // Responsive scale: fit 640x480 within window with letterboxing
+        const wrapper = document.getElementById('game-wrapper');
+        const container = document.getElementById('game-container');
+
+        const BASE_W = 640;
+        const BASE_H = 480;
+        const applyScale = () => {
+            if (!wrapper || !container) return;
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            const scale = Math.min(w / BASE_W, h / BASE_H);
+            const scaledW = BASE_W * scale;
+            const scaledH = BASE_H * scale;
+            const offsetX = Math.floor((w - scaledW) / 2);
+            const offsetY = Math.floor((h - scaledH) / 2);
+            container.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
+            container.style.transformOrigin = 'top left';
+        };
+
+        applyScale();
+        window.addEventListener('resize', applyScale);
     } catch (error) {
         console.error('❌ Failed to initialize game:', error);
         

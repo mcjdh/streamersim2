@@ -413,10 +413,13 @@ export class ModularUI {
         `;
 
         tutorialOverlay.appendChild(tutorialContent);
-        document.body.appendChild(tutorialOverlay);
+        const container = document.getElementById('game-container');
+        (container || document.body).appendChild(tutorialOverlay);
 
         document.getElementById('tutorial-close').addEventListener('click', () => {
-            document.body.removeChild(tutorialOverlay);
+            if (tutorialOverlay.parentNode) {
+                tutorialOverlay.parentNode.removeChild(tutorialOverlay);
+            }
             localStorage.setItem(CONFIG.TUTORIAL_SHOWN_KEY, 'true');
         });
     }
@@ -451,10 +454,22 @@ export class ModularUI {
             </div>
         `;
 
-        document.body.appendChild(victoryOverlay);
+        const container = document.getElementById('game-container');
+        if (container) {
+            victoryOverlay.style.position = 'absolute';
+            victoryOverlay.style.top = '0';
+            victoryOverlay.style.left = '0';
+            victoryOverlay.style.width = '100%';
+            victoryOverlay.style.height = '100%';
+            container.appendChild(victoryOverlay);
+        } else {
+            document.body.appendChild(victoryOverlay);
+        }
 
         document.getElementById('play-again').addEventListener('click', () => {
-            document.body.removeChild(victoryOverlay);
+            if (victoryOverlay.parentNode) {
+                victoryOverlay.parentNode.removeChild(victoryOverlay);
+            }
             this.game.reset();
         });
     }
