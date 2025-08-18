@@ -15,7 +15,14 @@ export class EventManager {
             probability: 0.1,
             applicableStreams: ["all"],
             effect: (game, ui) => {
-                const viewerBoost = Math.floor(Math.random() * 20) + 10;
+                let viewerBoost = Math.floor(Math.random() * 20) + 10;
+                
+                // Check for raid chance bonus from networking upgrade
+                if (game.player.raidEventChance > 0) {
+                    viewerBoost = Math.floor(viewerBoost * 1.5); // Bigger raids with networking
+                    ui.logEvent("Your networking skills attracted a MASSIVE raid!");
+                }
+                
                 game.currentStream.currentViewers += viewerBoost;
                 ui.updateViewerCount(game.currentStream.currentViewers);
                 ui.logEvent(`A raid brought in ${viewerBoost} new viewers!`);
@@ -29,7 +36,14 @@ export class EventManager {
             description: "Your stream is experiencing technical issues!",
             probability: 0.07,
             applicableStreams: ["all"],
+            isNegative: true, // Mark as negative event
             effect: (game, ui) => {
+                // Check for immunity
+                if (game.player.negativeEventImmunity) {
+                    ui.logEvent("Your AI moderation prevented technical difficulties!");
+                    return {reputation: 1}; // Small bonus for prevention
+                }
+                
                 const viewerLoss = Math.floor(game.currentStream.currentViewers * 0.2);
                 game.currentStream.currentViewers -= viewerLoss;
                 ui.updateViewerCount(game.currentStream.currentViewers);
@@ -45,7 +59,9 @@ export class EventManager {
             probability: 0.05,
             applicableStreams: ["all"],
             effect: (game, ui) => {
-                const amount = Math.floor(Math.random() * 50) + 50;
+                let amount = Math.floor(Math.random() * 50) + 50;
+                // Apply money multipliers to event donations too
+                amount = Math.floor(amount * (game.player.moneyMultiplier || 1));
                 game.player.addMoney(amount);
                 ui.logEvent(`Wow! Someone donated $${amount}!`);
                 game.player.stats.totalDonations += amount;
@@ -58,7 +74,14 @@ export class EventManager {
             description: "Trolls are spamming your chat!",
             probability: 0.07,
             applicableStreams: ["all"],
+            isNegative: true, // Mark as negative event
             effect: (game, ui) => {
+                // Check for immunity first
+                if (game.player.negativeEventImmunity) {
+                    ui.logEvent("Your AI moderation blocked the trolls before they could cause trouble!");
+                    return {reputation: 1};
+                }
+                
                 // Effect depends on streamer's reputation
                 if (game.player.reputation > 70) {
                     ui.logEvent("Trolls tried to spam your chat, but your community defended you!");
@@ -127,9 +150,18 @@ export class EventManager {
     
     getRandomEvent(streamType) {
         // Filter events applicable to current stream type
-        const applicableEvents = this.events.filter(event => {
+        let applicableEvents = this.events.filter(event => {
             return event.applicableStreams.includes("all") || event.applicableStreams.includes(streamType);
         });
+        
+        // Apply raid chance bonus by duplicating raid events
+        if (this.game.player.raidEventChance > 0) {
+            const raidEvent = applicableEvents.find(e => e.id === "raid");
+            if (raidEvent && Math.random() < this.game.player.raidEventChance) {
+                // Force a raid event
+                return raidEvent;
+            }
+        }
         
         // Weight by probability
         const totalProbability = applicableEvents.reduce((sum, event) => sum + event.probability, 0);

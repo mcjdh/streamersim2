@@ -452,12 +452,16 @@ export class ModularUI {
         tutorialContent.className = 'tutorial-content';
         tutorialContent.innerHTML = `
             <h2>Streamer Sim 2 - Pi Edition</h2>
-            <p><strong>Goal:</strong> 1,000 subs, $5,000, 90 reputation</p>
-            <p><strong>Controls:</strong></p>
-            <p>• Click stream type → Start Stream</p>
+            <p><strong>Goal:</strong> 500 subs, $2,500, 85 reputation</p>
+            <p><strong>How to Play:</strong></p>
+            <p>• Choose stream type → Start Stream</p>
             <p>• Switch types while live for variety</p>
-            <p>• Rest when energy is low</p>
-            <p>• Buy upgrades to grow faster</p>
+            <p>• Rest button or wait to recover energy</p>
+            <p>• Buy upgrades to improve performance</p>
+            <p><strong>Energy Tips:</strong></p>
+            <p>• Energy recovers passively over time</p>
+            <p>• Use Rest button for quick recovery</p>
+            <p>• Shop upgrades improve energy efficiency</p>
             <p><strong>Keyboard shortcuts:</strong></p>
             <p>Space: Start/End | R: Rest | 1-5: Stream types</p>
             <p>Ctrl+S: Save | Ctrl+L: Load | ESC: Close dialogs</p>

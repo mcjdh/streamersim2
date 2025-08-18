@@ -18,10 +18,27 @@ export class SaveManager {
                 reputation: this.game.player.reputation,
                 energy: this.game.player.energy,
                 maxEnergy: this.game.player.maxEnergy,
+                energyEfficiency: this.game.player.energyEfficiency,
+                energyRecoveryBonus: this.game.player.energyRecoveryBonus,
+                moneyMultiplier: this.game.player.moneyMultiplier,
                 purchasedItems: this.game.player.purchasedItems || [],
                 stats: this.game.player.stats,
                 skills: this.game.player.skills,
-                achievedMilestones: this.game.player.achievedMilestones
+                achievedMilestones: this.game.player.achievedMilestones,
+                
+                // New roguelike properties
+                startingViewerMultiplier: this.game.player.startingViewerMultiplier,
+                viewerRetentionBonus: this.game.player.viewerRetentionBonus,
+                subscriberConversionBonus: this.game.player.subscriberConversionBonus,
+                donationRateMultiplier: this.game.player.donationRateMultiplier,
+                negativeEventImmunity: this.game.player.negativeEventImmunity,
+                raidEventChance: this.game.player.raidEventChance,
+                passiveIncomePerMinute: this.game.player.passiveIncomePerMinute,
+                chatMomentumBonus: this.game.player.chatMomentumBonus,
+                completionBonusSubscribers: this.game.player.completionBonusSubscribers,
+                completionBonusAll: this.game.player.completionBonusAll,
+                completionThreshold: this.game.player.completionThreshold,
+                activeSynergies: this.game.player.activeSynergies
             },
             streamTypes: CONFIG.STREAM_TYPES.map(type => ({
                 id: type.id,
@@ -43,7 +60,38 @@ export class SaveManager {
         this.game.player.reputation = gameState.player.reputation ?? CONFIG.STARTING_REPUTATION;
         this.game.player.energy = gameState.player.energy ?? CONFIG.STARTING_ENERGY;
         this.game.player.maxEnergy = gameState.player.maxEnergy ?? CONFIG.STARTING_ENERGY;
+        this.game.player.energyEfficiency = gameState.player.energyEfficiency ?? 1.0;
+        this.game.player.energyRecoveryBonus = gameState.player.energyRecoveryBonus ?? 0;
+        this.game.player.moneyMultiplier = gameState.player.moneyMultiplier ?? 1;
         this.game.player.purchasedItems = gameState.player.purchasedItems || [];
+        this.game.player.stats = gameState.player.stats || {
+            totalStreamTime: 0,
+            streamsCompleted: 0,
+            maxViewers: 0,
+            totalEvents: 0,
+            totalDonations: 0
+        };
+        this.game.player.skills = gameState.player.skills || {
+            gaming: 1,
+            talking: 1,
+            technical: 1,
+            creativity: 1
+        };
+        this.game.player.achievedMilestones = gameState.player.achievedMilestones || [];
+
+        // Restore new roguelike properties
+        this.game.player.startingViewerMultiplier = gameState.player.startingViewerMultiplier ?? 1;
+        this.game.player.viewerRetentionBonus = gameState.player.viewerRetentionBonus ?? 0;
+        this.game.player.subscriberConversionBonus = gameState.player.subscriberConversionBonus ?? 0;
+        this.game.player.donationRateMultiplier = gameState.player.donationRateMultiplier ?? 1;
+        this.game.player.negativeEventImmunity = gameState.player.negativeEventImmunity ?? false;
+        this.game.player.raidEventChance = gameState.player.raidEventChance ?? 0;
+        this.game.player.passiveIncomePerMinute = gameState.player.passiveIncomePerMinute ?? 0;
+        this.game.player.chatMomentumBonus = gameState.player.chatMomentumBonus ?? 0;
+        this.game.player.completionBonusSubscribers = gameState.player.completionBonusSubscribers ?? 1;
+        this.game.player.completionBonusAll = gameState.player.completionBonusAll ?? 1;
+        this.game.player.completionThreshold = gameState.player.completionThreshold ?? 1;
+        this.game.player.activeSynergies = gameState.player.activeSynergies || [];
         this.game.player.stats = gameState.player.stats || {
             totalStreamTime: 0,
             streamsCompleted: 0,

@@ -167,9 +167,17 @@ export class Game {
                     this.currentStream.step(dt);
                     // Drive chat timing in heartbeat
                     this.chatManager.step(dt);
+                    
+                    // Apply passive income during streaming (from sponsorships etc.)
+                    if (this.player.passiveIncomePerMinute > 0) {
+                        const passiveIncome = (this.player.passiveIncomePerMinute / 60) * dt;
+                        this.player.addMoney(Math.floor(passiveIncome));
+                    }
                 } else if (this.energyRecoveryEnabled && this.player.energy < this.player.maxEnergy) {
-                    const recoveryPerSec = CONFIG.ENERGY_RECOVERY_RATE / 60; // energy per second
-                    this.player.recoverEnergy(recoveryPerSec * dt);
+                    const baseRecoveryPerSec = CONFIG.ENERGY_RECOVERY_RATE / 60; // energy per second
+                    const bonusMultiplier = 1 + (this.player.energyRecoveryBonus || 0);
+                    const totalRecoveryPerSec = baseRecoveryPerSec * bonusMultiplier;
+                    this.player.recoverEnergy(totalRecoveryPerSec * dt);
                 }
 
                 // Auto-save accumulator
@@ -218,15 +226,17 @@ export class Game {
             return;
         }
 
-        const energyGained = CONFIG.ACTIVE_REST_ENERGY_GAIN;
-        this.player.recoverEnergy(energyGained);
+        const baseEnergyGained = CONFIG.ACTIVE_REST_ENERGY_GAIN;
+        const bonusMultiplier = 1 + (this.player.energyRecoveryBonus || 0);
+        const totalEnergyGained = Math.floor(baseEnergyGained * bonusMultiplier);
+        this.player.recoverEnergy(totalEnergyGained);
         
         // Random rest messages
         const restMessages = [
-            `Took a quick break and recovered ${energyGained} energy.`,
-            `Recharged with a power nap! +${energyGained} energy.`,
-            `Grabbed a snack and recovered ${energyGained} energy.`,
-            `Stretched and recovered ${energyGained} energy.`
+            `Took a quick break and recovered ${totalEnergyGained} energy.`,
+            `Recharged with a power nap! +${totalEnergyGained} energy.`,
+            `Grabbed a snack and recovered ${totalEnergyGained} energy.`,
+            `Stretched and recovered ${totalEnergyGained} energy.`
         ];
         this.ui.logEvent(restMessages[Math.floor(Math.random() * restMessages.length)]);
         

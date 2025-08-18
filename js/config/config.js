@@ -7,22 +7,22 @@ export const CONFIG = {
     STARTING_MONEY: 50,
     STARTING_SUBSCRIBERS: 0,
     STARTING_REPUTATION: 50,
-    STARTING_ENERGY: 12,
+    STARTING_ENERGY: 20, // Improved starting energy for better early game
     
-    // Stream content options - Progressive unlocking
+    // Stream content options - Better balanced energy costs
     STREAM_TYPES: [
-        { id: "gaming", name: "Gaming", cost: 0, energyCost: 8, baseViewers: 10, unlocked: true },
-        { id: "justchatting", name: "Just Chatting", cost: 0, energyCost: 5, baseViewers: 8, unlocked: true },
-        { id: "music", name: "Music", cost: 5, energyCost: 10, baseViewers: 15, unlocked: false, unlockAt: 25 }, // Unlock at 25 subs
-        { id: "artstream", name: "Art Stream", cost: 10, energyCost: 12, baseViewers: 20, unlocked: false, unlockAt: 50 },
-        { id: "coding", name: "Coding", cost: 0, energyCost: 15, baseViewers: 8, unlocked: false, unlockAt: 100 }
+        { id: "gaming", name: "Gaming", cost: 0, energyCost: 6, baseViewers: 10, unlocked: true }, // Reduced from 8
+        { id: "justchatting", name: "Just Chatting", cost: 0, energyCost: 4, baseViewers: 8, unlocked: true }, // Reduced from 5
+        { id: "music", name: "Music", cost: 5, energyCost: 8, baseViewers: 15, unlocked: false, unlockAt: 25 }, // Reduced from 10
+        { id: "artstream", name: "Art Stream", cost: 10, energyCost: 10, baseViewers: 20, unlocked: false, unlockAt: 50 }, // Reduced from 12
+        { id: "coding", name: "Coding", cost: 0, energyCost: 12, baseViewers: 8, unlocked: false, unlockAt: 100 } // Reduced from 15
     ],
     
-    // Progression thresholds
+    // Progression thresholds - Better balanced for actual gameplay
     WIN_CONDITIONS: {
-        SUBSCRIBERS: 1000,
-        MONEY: 5000,
-        REPUTATION: 90
+        SUBSCRIBERS: 500, // Reduced from 1000 - more achievable
+        MONEY: 2500, // Reduced from 5000 - still challenging
+        REPUTATION: 85 // Slightly reduced from 90
     },
     
     // Event probability - reduced for performance
@@ -30,12 +30,12 @@ export const CONFIG = {
     
     // Economy settings - performance optimized
     SUBSCRIBER_VALUE: 1.5,
-    VIEWER_DONATION_CHANCE: 0.01, // Slightly reduced
-    AVERAGE_DONATION_AMOUNT: [1, 20],
+    VIEWER_DONATION_CHANCE: 0.025, // Increased from 0.01 for better engagement
+    AVERAGE_DONATION_AMOUNT: [2, 25], // Slightly better donation range
     LIVE_SUBSCRIBER_RATE: 0.001,
     
     // Energy recovery - faster for shorter sessions
-    ENERGY_RECOVERY_RATE: 6, // Much slower passive recover; encourage Rest
+    ENERGY_RECOVERY_RATE: 18, // Improved passive recovery (0.3 per second)
     ENERGY_RECOVERY_INTERVAL: 5, // Seconds (still used if needed)
     ENERGY_DEPLETION_BASE: 0.35, // Base per-second drain before curve
     
@@ -43,15 +43,15 @@ export const CONFIG = {
     LOG_MAX_ENTRIES: 20, // Reduced for performance
     CHAT_MAX_ENTRIES: 15, // Limit chat messages
 
-    // Subscriber Milestones - More granular
+    // Subscriber Milestones - Integrated with shop progression
     SUBSCRIBER_MILESTONES: [
-        { count: 10, description: "First milestone! Your journey begins.", rewards: { money: 50 } },
-        { count: 25, description: "Growing fast! Music streams unlocked!", rewards: { money: 100, maxEnergyBonus: 5 } },
-        { count: 50, description: "Solid fanbase! Art streams unlocked!", rewards: { money: 200, reputation: 5 } },
-        { count: 100, description: "Triple digits! Coding streams unlocked!", rewards: { money: 500, reputation: 10, maxEnergyBonus: 10 } },
-        { count: 250, description: "Rising star! Your dedication shows.", rewards: { money: 1000, reputation: 10 } },
-        { count: 500, description: "Half way there! Keep pushing!", rewards: { money: 2000, maxEnergyBonus: 15, reputation: 15 } },
-        { count: 750, description: "Almost famous! The finish line is near.", rewards: { money: 3000, reputation: 20 } }
+        { count: 10, description: "First milestone! Your journey begins.", rewards: { money: 25 } },
+        { count: 25, description: "Growing fast! Music streams unlocked!", rewards: { money: 60, maxEnergyBonus: 5 } },
+        { count: 50, description: "Solid fanbase! Art streams unlocked! Professional tier unlocked.", rewards: { money: 120, reputation: 5 } },
+        { count: 100, description: "Triple digits! Coding streams unlocked! Advanced tier unlocked.", rewards: { money: 250, reputation: 8, maxEnergyBonus: 8 } },
+        { count: 200, description: "Growing strong! Synergy tier unlocked! Your reputation spreads.", rewards: { money: 500, reputation: 10 } },
+        { count: 350, description: "Rising star! Elite upgrades available! Your dedication shows.", rewards: { money: 800, reputation: 12, maxEnergyBonus: 10 } },
+        { count: 500, description: "VICTORY! You've reached streaming stardom! All tiers mastered!", rewards: { money: 1500, maxEnergyBonus: 15, reputation: 15 } }
     ],
 
     // Subscriber Churn Settings (Post-Stream)

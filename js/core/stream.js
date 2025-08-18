@@ -175,6 +175,9 @@ export class Stream {
         
         viewers *= (0.7 + (relevantSkill * 0.3));
         
+        // Apply starting viewer multiplier from upgrades
+        viewers *= (this.game.player.startingViewerMultiplier || 1);
+        
         // Add randomness
         viewers *= (0.8 + Math.random() * 0.4);
         
@@ -230,15 +233,34 @@ export class Stream {
         moneyEarned *= incomeMult;
         rewards.money = Math.floor(moneyEarned);
         
-        // Subscriber calculation with better formula
+        // Enhanced subscriber calculation with upgrade bonuses
         if (avgViewers > 0) {
-            const baseNewSubs = (avgViewers / 20); // Slightly more generous for short sessions
-            const reputationMultiplier = 0.7 + (this.game.player.reputation / 100); // 0.7x to 1.7x
-            const peakViewerBonus = (this.peakViewers / 60) * 0.4; // Peak matters more in short runs
+            const baseNewSubs = (avgViewers / 15); // More generous - reduced from 20
+            const reputationMultiplier = 0.8 + (this.game.player.reputation / 100); // 0.8x to 1.8x - improved
+            const peakViewerBonus = (this.peakViewers / 50) * 0.5; // Better peak bonus - from 60 to 50
+            const conversionBonus = 1 + (this.game.player.subscriberConversionBonus || 0);
             
-            rewards.subscribers = Math.floor(
-                (baseNewSubs + peakViewerBonus) * durationFactor * reputationMultiplier
-            );
+            let subscriberGain = (baseNewSubs + peakViewerBonus) * durationFactor * reputationMultiplier * conversionBonus;
+            
+            // Apply completion bonuses for subscriber gain
+            const completionThreshold = this.game.player.completionThreshold || 1;
+            if (durationFactor >= completionThreshold) {
+                const completionBonus = this.game.player.completionBonusSubscribers || 1;
+                subscriberGain *= completionBonus;
+            }
+            
+            rewards.subscribers = Math.floor(subscriberGain);
+        }
+
+        // Apply completion bonuses to ALL rewards if threshold met
+        const completionThreshold = this.game.player.completionThreshold || 1;
+        if (durationFactor >= completionThreshold) {
+            const completionBonusAll = this.game.player.completionBonusAll || 1;
+            if (completionBonusAll > 1) {
+                rewards.money = Math.floor(rewards.money * completionBonusAll);
+                rewards.subscribers = Math.floor(rewards.subscribers * completionBonusAll);
+                // Don't multiply reputation to avoid inflation
+            }
         }
         
         // Reputation changes
@@ -264,12 +286,13 @@ export class Stream {
     updateViewers() {
         if (!this.active) return;
         
-        // Calculate viewer retention
+        // Calculate viewer retention with upgrade bonuses
         const baseRetention = CONFIG.VIEWER_RETENTION_BASE;
         const repBonus = this.game.player.reputation * CONFIG.VIEWER_RETENTION_REPUTATION_BONUS;
         const skillBonus = this.getRelevantSkillLevel() * 0.05;
+        const upgradeBonus = this.game.player.viewerRetentionBonus || 0;
         
-        this.viewerRetention = Math.min(0.95, baseRetention + repBonus + skillBonus);
+        this.viewerRetention = Math.min(0.98, baseRetention + repBonus + skillBonus + upgradeBonus);
         
         // Apply retention using expectation (O(1))
         const expectedStay = Math.round(this.currentViewers * this.viewerRetention);
@@ -308,18 +331,22 @@ export class Stream {
     }
     
     checkForDonations() {
-        // Each viewer has a small chance of donating each second
-        // Donations scale with viewers and reputation, and slightly with peaks
+        // Enhanced donation system with upgrade multipliers
         const reputationBonus = 1 + (this.game.player.reputation / 200); // up to 1.5x
         const peakFactor = 1 + Math.min(0.5, this.peakViewers / 200); // up to +50%
-        const donationChance = CONFIG.VIEWER_DONATION_CHANCE * this.currentViewers * reputationBonus * peakFactor;
+        const upgradeMultiplier = this.game.player.donationRateMultiplier || 1;
+        
+        const donationChance = CONFIG.VIEWER_DONATION_CHANCE * this.currentViewers * reputationBonus * peakFactor * upgradeMultiplier;
         
         if (Math.random() < donationChance) {
-            const donationAmount = Math.floor(
+            let donationAmount = Math.floor(
                 Math.random() * 
                 (CONFIG.AVERAGE_DONATION_AMOUNT[1] - CONFIG.AVERAGE_DONATION_AMOUNT[0]) + 
                 CONFIG.AVERAGE_DONATION_AMOUNT[0]
             );
+            
+            // Apply money multiplier to donations too
+            donationAmount = Math.floor(donationAmount * (this.game.player.moneyMultiplier || 1));
             
             this.game.player.addMoney(donationAmount);
             this.game.player.stats.totalDonations += donationAmount;

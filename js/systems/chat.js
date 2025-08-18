@@ -133,9 +133,12 @@ export class ChatManager {
         
         this.lastMessageTime = now;
         
-        // Apply momentum effect to viewer count
+        // Apply momentum effect to viewer count with upgrade bonuses
         if (this.game.currentStream.active && this.momentum > 5) {
-            const viewerBoost = Math.floor(this.momentum * CONFIG.CHAT_MOMENTUM_MULTIPLIER);
+            const baseMomentumEffect = CONFIG.CHAT_MOMENTUM_MULTIPLIER;
+            const bonusMultiplier = 1 + (this.game.player.chatMomentumBonus || 0);
+            const viewerBoost = Math.floor(this.momentum * baseMomentumEffect * bonusMultiplier);
+            
             if (Math.random() < CONFIG.VIEWER_GROWTH_MOMENTUM) {
                 this.game.currentStream.currentViewers += viewerBoost;
                 this.ui.updateViewerCount(this.game.currentStream.currentViewers);
