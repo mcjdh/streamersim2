@@ -22,6 +22,10 @@ export class Game {
                 this._statsUpdateTimer = null;
             }, this._statsUpdateDelayMs);
         };
+        // Heartbeat loop state
+        this._rafId = null;
+        this._lastTs = null;
+        this.energyRecoveryEnabled = false;
         // Create player with UI callbacks
         this.player = new Player({
             updateStats: () => this.scheduleStatsUpdate(),
@@ -33,6 +37,9 @@ export class Game {
         this.eventManager = new EventManager(this, this.ui);
         this.saveManager = new SaveManager(this);
         this.energyRecoveryTimer = null;
+        // Auto-save via heartbeat
+        this._autoSaveEnabled = true;
+        this._autoSaveAcc = 0;
         this.isActive = false;
         this.sessionStartTime = Date.now();
         this.firstStream = true;
@@ -46,9 +53,11 @@ export class Game {
         
         // Start energy recovery when not streaming
         this.startEnergyRecovery();
+        // Start unified heartbeat
+        this.startHeartbeat();
         
-        // Start auto-save
-        this.saveManager.startAutoSave();
+        // Enable auto-save (heartbeat-driven)
+        this._autoSaveEnabled = true;
         
         // Set initial UI state
         this.ui.updateStats();
@@ -112,34 +121,19 @@ export class Game {
     }
     
     startEnergyRecovery() {
-        // Clear any existing timer
-        if (this.energyRecoveryTimer) {
-            clearInterval(this.energyRecoveryTimer);
-        }
-        
-        // Start new timer for energy recovery when not streaming
-        this.energyRecoveryTimer = setInterval(() => {
-            if (!this.currentStream.active && this.player.energy < this.player.maxEnergy) {
-                // Calculate energy recovery
-                const recovery = (CONFIG.ENERGY_RECOVERY_RATE / 60) * CONFIG.ENERGY_RECOVERY_INTERVAL;
-                this.player.recoverEnergy(recovery);
-            }
-        }, CONFIG.ENERGY_RECOVERY_INTERVAL * 1000);
+        this.energyRecoveryEnabled = true;
     }
     
     stopEnergyRecovery() {
-        if (this.energyRecoveryTimer) {
-            clearInterval(this.energyRecoveryTimer);
-            this.energyRecoveryTimer = null;
-        }
+        this.energyRecoveryEnabled = false;
     }
     
     startAutoSave() {
-        this.saveManager.startAutoSave();
+        this._autoSaveEnabled = true;
     }
     
     stopAutoSave() {
-        this.saveManager.stopAutoSave();
+        this._autoSaveEnabled = false;
     }
     
     autoSave() {
@@ -149,13 +143,57 @@ export class Game {
     victory() {
         this.isActive = false;
         this.stopEnergyRecovery();
-        this.saveManager.stopAutoSave();
+        this.stopHeartbeat();
+        this._autoSaveEnabled = false;
         if (this.currentStream.active) {
             this.endStream();
         }
         
         this.ui.logEvent("CONGRATULATIONS! You've become a successful streamer!");
         this.ui.showVictoryScreen();
+    }
+
+    // ===== Heartbeat loop =====
+    startHeartbeat() {
+        if (this._rafId) cancelAnimationFrame(this._rafId);
+        this._lastTs = performance.now();
+        const tick = (ts) => {
+            const dtMs = Math.min(250, ts - this._lastTs); // clamp to avoid huge jumps
+            this._lastTs = ts;
+            const dt = dtMs / 1000;
+
+            if (this.isActive) {
+                if (this.currentStream.active) {
+                    this.currentStream.step(dt);
+                    // Drive chat timing in heartbeat
+                    this.chatManager.step(dt);
+                } else if (this.energyRecoveryEnabled && this.player.energy < this.player.maxEnergy) {
+                    const recoveryPerSec = CONFIG.ENERGY_RECOVERY_RATE / 60; // energy per second
+                    this.player.recoverEnergy(recoveryPerSec * dt);
+                }
+
+                // Auto-save accumulator
+                if (this._autoSaveEnabled) {
+                    this._autoSaveAcc += dt;
+                    if (this._autoSaveAcc >= CONFIG.AUTO_SAVE_INTERVAL) {
+                        this._autoSaveAcc = 0;
+                        this.saveManager.autoSave();
+                    }
+                } else {
+                    this._autoSaveAcc = 0;
+                }
+            }
+
+            this._rafId = requestAnimationFrame(tick);
+        };
+        this._rafId = requestAnimationFrame(tick);
+    }
+
+    stopHeartbeat() {
+        if (this._rafId) {
+            cancelAnimationFrame(this._rafId);
+            this._rafId = null;
+        }
     }
     
     getGameStats() {

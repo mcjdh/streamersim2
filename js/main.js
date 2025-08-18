@@ -43,6 +43,21 @@ window.addEventListener('DOMContentLoaded', () => {
 
         applyScale();
         window.addEventListener('resize', applyScale);
+
+        // Pause heartbeat when tab hidden
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                GAME.stopHeartbeat();
+                if (GAME.currentStream?.active) {
+                    GAME.chatManager.stopChatting();
+                }
+            } else {
+                GAME.startHeartbeat();
+                if (GAME.currentStream?.active) {
+                    GAME.chatManager.startChatting(GAME.currentStream.type);
+                }
+            }
+        });
     } catch (error) {
         console.error('❌ Failed to initialize game:', error);
         

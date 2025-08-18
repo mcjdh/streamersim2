@@ -19,6 +19,8 @@ export class Stream {
         this.viewerHistory = [];
         this.viewerHistoryWindow = 300; // cap history to last ~5 minutes at 1s ticks
         this.energyDrainRate = CONFIG.ENERGY_DEPLETION_BASE;
+        this._elapsedSec = 0; // accumulators for 1s cadence logic
+        this._timerStarted = false;
     }
     
     start(streamType) {
@@ -55,8 +57,8 @@ export class Stream {
         // Use energy
         this.game.player.useEnergy(streamTypeConfig.energyCost);
         
-        // Start UI updates
-        this.startTimers();
+        // Start UI updates via heartbeat (no local interval)
+        this._timerStarted = true;
         this.ui.updateStreamDisplay(this.type);
         this.ui.logEvent(`Started a ${streamTypeConfig.name} stream!`);
         this.game.chatManager.startChatting(this.type); // Start chat simulation
@@ -293,42 +295,37 @@ export class Stream {
         }
     }
     
-    startTimers() {
-        // Stream update timer - every second
-        this.timer = setInterval(() => {
-            // Calculate elapsed time
-            const elapsed = Math.floor((new Date() - this.startTime) / 1000);
-            
-            // Update UI
-            this.ui.updateStreamTimer(elapsed);
-            
-            // Update viewers
-            this.updateViewers();
-            
-            // Check for random events
-            this.checkForRandomEvent();
+    // Called from Game heartbeat with dt in seconds
+    step(dt) {
+        if (!this.active) return;
+        // Accumulate elapsed for 1 Hz logic
+        this._elapsedSec += dt;
+        this.duration = (new Date() - this.startTime) / 1000;
+        this.ui.updateStreamTimer(Math.floor(this.duration));
 
-            // Check for new live subscribers
+        // Per-second cadence
+        while (this._elapsedSec >= 1) {
+            this._elapsedSec -= 1;
+            this.updateViewers();
+            this.checkForRandomEvent();
             if (this.currentViewers > 0 && Math.random() < (this.currentViewers * CONFIG.LIVE_SUBSCRIBER_RATE)) {
                 this.game.player.addSubscribers(1);
-                // Consider a subtle UI notification here in the future if desired
             }
-            
-            // Check if we've reached target duration
-            if (elapsed >= this.targetDuration) {
+            if (this.duration >= this.targetDuration) {
                 this.ui.highlightEndStream();
             }
-            
-            // Dynamic energy usage based on calculated drain rate
+            // Drain energy once per second according to rate
             this.game.player.useEnergy(this.energyDrainRate);
             if (this.game.player.energy <= 0) {
                 this.ui.logEvent("You're exhausted! Stream ended abruptly.");
-                this.game.chatManager.stopChatting(); // Stop chat if stream ends due to exhaustion
+                this.game.chatManager.stopChatting();
                 this.end();
+                return;
             }
-        }, 1000);
+        }
     }
-      clearTimers() {
+
+    clearTimers() {
         if (this.timer) {
             clearInterval(this.timer);
             this.timer = null;

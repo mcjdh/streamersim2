@@ -15,9 +15,14 @@ export class ChatManager {
     constructor(game, ui) {
         this.game = game;
         this.ui = ui;
-        this.chatTimer = null;
+        this.chatTimer = null; // legacy; no longer used by dt loop
         this.momentum = 0; // Chat activity momentum
         this.lastMessageTime = Date.now();
+        this.active = false;
+        this._accMs = 0;
+        this._nextDelayMs = 1500;
+        this._burstCount = 0;
+        this._burstAcc = 0;
         // Data is now imported from chatData.js for easy tuning
     }
 
@@ -141,38 +146,56 @@ export class ChatManager {
     startChatting(streamType) {
         if (this.chatTimer) {
             clearTimeout(this.chatTimer);
+            this.chatTimer = null;
         }
-        
-        // Reset momentum
+        this.active = true;
+        this.streamType = streamType;
         this.momentum = 0;
-        
-        // Initial burst of messages with slight staggering
-        for (let i = 0; i < 3; i++) { 
-            setTimeout(() => this.generateChatMessage(streamType), (i * 500) + (Math.random() * 500));
-        }
-
-        // Adaptive scheduling using setTimeout
-        const loop = () => {
-            const viewers = this.game.currentStream.currentViewers;
-            const base = 3000; // 3 seconds
-            const min = 1000; // 1 second
-            const delay = Math.max(min, base - (viewers * 20));
-
-            const messageCount = viewers > 50 ? Math.floor(Math.random() * 3) + 1 : 1;
-            for (let i = 0; i < messageCount; i++) {
-                setTimeout(() => this.generateChatMessage(streamType), i * 200);
-            }
-
-            this.chatTimer = setTimeout(loop, delay);
-        };
-
-        loop();
+        this._accMs = 0;
+        this._burstCount = 3; // initial messages
+        this._burstAcc = 0;
+        // prime initial delay based on current viewers
+        const viewers = this.game.currentStream.currentViewers || 0;
+        const base = 3000, min = 1000;
+        this._nextDelayMs = Math.max(min, base - (viewers * 20));
     }
 
     stopChatting() {
-        if (this.chatTimer) {
-            clearTimeout(this.chatTimer);
-            this.chatTimer = null;
+        if (this.chatTimer) { clearTimeout(this.chatTimer); this.chatTimer = null; }
+        this.active = false;
+        this._accMs = 0;
+        this._burstAcc = 0;
+        this._burstCount = 0;
+    }
+
+    // dt-driven chat loop called from Game heartbeat while streaming
+    step(dt) {
+        if (!this.active || !this.game.currentStream.active) return;
+        const viewers = this.game.currentStream.currentViewers || 0;
+
+        // Handle initial burst quickly
+        if (this._burstCount > 0) {
+            this._burstAcc += dt;
+            if (this._burstAcc >= 0.4) { // ~every 400ms
+                this._burstAcc -= 0.4;
+                this._burstCount--;
+                this.generateChatMessage(this.streamType);
+            }
+            return;
+        }
+
+        this._accMs += dt * 1000;
+        const base = 3000, min = 1000;
+        const desiredDelay = Math.max(min, base - (viewers * 20));
+        // Smoothly adjust toward desired delay
+        this._nextDelayMs = this._nextDelayMs * 0.7 + desiredDelay * 0.3;
+
+        if (this._accMs >= this._nextDelayMs) {
+            this._accMs = 0;
+            const messageCount = viewers > 50 ? Math.floor(Math.random() * 3) + 1 : 1;
+            for (let i = 0; i < messageCount; i++) {
+                this.generateChatMessage(this.streamType);
+            }
         }
     }
 
