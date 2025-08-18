@@ -13,6 +13,7 @@ export class Player {
         this.reputation = 0;
         this.energy = 100;
         this.maxEnergy = CONFIG.STARTING_ENERGY;
+        this.energyEfficiency = 1.0; // < 1 drains slower, > 1 drains faster
         this.stats = {
             totalStreamTime: 0,
             streamsCompleted: 0,
@@ -177,6 +178,23 @@ export class Player {
                 if (item.effect.energy) {
                     this.recoverEnergy(item.effect.energy);
                     this.callbacks.logEvent(`Purchased ${item.name}. Energy recovered by ${item.effect.energy}.`);
+                }
+                if (item.effect.maxEnergyBonus) {
+                    this.maxEnergy += item.effect.maxEnergyBonus;
+                    this.energy = Math.min(this.maxEnergy, this.energy + item.effect.maxEnergyBonus);
+                    this.callbacks.logEvent(`Purchased ${item.name}. Max energy increased by ${item.effect.maxEnergyBonus}.`);
+                }
+                if (item.effect.energyEfficiency) {
+                    // Multiplicative stacking: multiply current efficiency by provided factor
+                    this.energyEfficiency *= item.effect.energyEfficiency;
+                    // Clamp to reasonable bounds
+                    this.energyEfficiency = Math.max(0.5, Math.min(1.5, this.energyEfficiency));
+                    this.callbacks.logEvent(`Purchased ${item.name}. Energy efficiency improved.`);
+                }
+                if (item.effect.moneyMultiplier) {
+                    // Store a passive income multiplier for rewards calculation
+                    this.moneyMultiplier = (this.moneyMultiplier || 1) * item.effect.moneyMultiplier;
+                    this.callbacks.logEvent(`Purchased ${item.name}. Income multiplier now x${this.moneyMultiplier.toFixed(2)}.`);
                 }
             }
 

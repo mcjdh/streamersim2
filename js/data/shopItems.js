@@ -93,6 +93,33 @@ export const SHOP_ITEMS = [
         description: "Professional streaming control panel. Boosts technical skill.",
         effect: { skill: "technical", amount: 0.3 },
         repeatable: false
+    },
+    {
+        id: "editing_suite",
+        name: "Editing Suite",
+        cost: 350,
+        category: "tech",
+        description: "Post-stream polish increases income from streams.",
+        effect: { moneyMultiplier: 1.15 },
+        repeatable: false
+    },
+    {
+        id: "endurance_training",
+        name: "Endurance Training",
+        cost: 300,
+        category: "skills",
+        description: "Improve stamina to stream longer per run.",
+        effect: { maxEnergyBonus: 20 },
+        repeatable: true
+    },
+    {
+        id: "efficient_workflow",
+        name: "Efficient Workflow",
+        cost: 280,
+        category: "tech",
+        description: "Reduce per-second energy drain during streams.",
+        effect: { energyEfficiency: 0.9 },
+        repeatable: true
     }
 ];
 

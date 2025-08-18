@@ -173,7 +173,7 @@ export class ChatManager {
         if (!this.active || !this.game.currentStream.active) return;
         const viewers = this.game.currentStream.currentViewers || 0;
 
-        // Handle initial burst quickly
+        // Handle initial burst quickly (but not too fast)
         if (this._burstCount > 0) {
             this._burstAcc += dt;
             if (this._burstAcc >= 0.4) { // ~every 400ms
@@ -192,7 +192,7 @@ export class ChatManager {
 
         if (this._accMs >= this._nextDelayMs) {
             this._accMs = 0;
-            const messageCount = viewers > 50 ? Math.floor(Math.random() * 3) + 1 : 1;
+            const messageCount = viewers > 30 ? Math.floor(Math.random() * 2) + 1 : 1;
             for (let i = 0; i < messageCount; i++) {
                 this.generateChatMessage(this.streamType);
             }

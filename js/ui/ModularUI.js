@@ -390,6 +390,58 @@ export class ModularUI {
     // ====== Tutorial and victory screen ======
 
     /**
+     * Show run summary after a stream ends
+     */
+    showRunSummary(summary) {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = `
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center;
+            color: #fff; z-index: 150; font-family: Arial, sans-serif;`;
+
+        const panel = document.createElement('div');
+        panel.style.cssText = `
+            background: #1e1e1e; border: 1px solid #444; border-radius: 8px; padding: 16px 20px; width: 340px; text-align: center;`;
+
+        panel.innerHTML = `
+            <h3 style="color:#9147ff; margin-bottom: 10px;">Run Summary</h3>
+            <div style="font-size: 13px; text-align:left; margin: 0 auto; width: 100%;">
+                <p><strong>Type:</strong> ${summary.streamType}</p>
+                <p><strong>Duration:</strong> ${summary.duration}s</p>
+                <p><strong>Avg Viewers (EMA):</strong> ${summary.avgViewers}</p>
+                <p><strong>Peak Viewers:</strong> ${summary.peakViewers}</p>
+                <p><strong>Earnings:</strong> $${summary.moneyGained}</p>
+                <p><strong>Subscribers:</strong> +${summary.subsGained}</p>
+                <p><strong>Reputation:</strong> ${summary.reputationChange >= 0 ? '+' : ''}${summary.reputationChange}</p>
+            </div>
+            <div style="margin-top: 12px; display:flex; gap:8px; justify-content:center;">
+                <button id="run-summary-rest">Rest</button>
+                <button id="run-summary-next">Start Next Run</button>
+                <button id="run-summary-close">Close</button>
+            </div>
+        `;
+
+        overlay.appendChild(panel);
+        const container = document.getElementById('game-container');
+        (container || document.body).appendChild(overlay);
+
+        const closeOverlay = () => { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); };
+
+        document.getElementById('run-summary-close').onclick = closeOverlay;
+        document.getElementById('run-summary-rest').onclick = () => {
+            closeOverlay();
+            this.game.performActiveRest();
+        };
+        document.getElementById('run-summary-next').onclick = () => {
+            closeOverlay();
+            const nextType = this.streamTypeSelector.getSelectedStreamType();
+            if (!this.game.currentStream.active) {
+                this.game.startStream(nextType);
+            }
+        };
+    }
+
+    /**
      * Show tutorial
      */
     showTutorial() {

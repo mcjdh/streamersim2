@@ -1,13 +1,13 @@
 export const CONFIG = {
     // Stream settings - optimized for Pi5
-    STREAM_MIN_DURATION: 30, // Shorter for quick gameplay
-    STREAM_MAX_DURATION: 90, // Reduced max duration
+    STREAM_MIN_DURATION: 12, // Baseline guidance for short early runs
+    STREAM_MAX_DURATION: 120, // Soft cap guidance only; actual duration driven by energy
     
     // Game balance
     STARTING_MONEY: 50,
     STARTING_SUBSCRIBERS: 0,
     STARTING_REPUTATION: 50,
-    STARTING_ENERGY: 100,
+    STARTING_ENERGY: 12,
     
     // Stream content options - Progressive unlocking
     STREAM_TYPES: [
@@ -35,9 +35,9 @@ export const CONFIG = {
     LIVE_SUBSCRIBER_RATE: 0.001,
     
     // Energy recovery - faster for shorter sessions
-    ENERGY_RECOVERY_RATE: 25, // Faster recovery
-    ENERGY_RECOVERY_INTERVAL: 5, // Less frequent updates for performance
-    ENERGY_DEPLETION_BASE: 0.3, // Slightly higher depletion
+    ENERGY_RECOVERY_RATE: 6, // Much slower passive recover; encourage Rest
+    ENERGY_RECOVERY_INTERVAL: 5, // Seconds (still used if needed)
+    ENERGY_DEPLETION_BASE: 0.35, // Base per-second drain before curve
     
     // Performance limits for Pi5
     LOG_MAX_ENTRIES: 20, // Reduced for performance
@@ -62,7 +62,7 @@ export const CONFIG = {
     MAX_CHURN_PERCENT_CAP: 0.10, // Max 10% of subs can be lost in one event
     
     // Active Rest Settings
-    ACTIVE_REST_ENERGY_GAIN: 20, // Energy gained per click of the Rest button
+    ACTIVE_REST_ENERGY_GAIN: 6, // About half a base run
 
     // Simplified chat momentum for performance
     CHAT_MOMENTUM_MULTIPLIER: 0.05, // Reduced calculations
